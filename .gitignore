@@ -1,0 +1,16 @@
+# 系统与编辑器垃圾
+Thumbs.db
+.DS_Store
+desktop.ini
+*.swp
+*~
+
+# 依赖与构建产物（本项目为零依赖纯静态，正常不该出现）
+node_modules/
+dist/
+build/
+
+# 临时/本地文件
+*.log
+tmp/
+.tmp/

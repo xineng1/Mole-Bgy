@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="G1SLYU9aQRf4JqUc52iogJ">
+<head data-page-node-id="KY9i4DFkiuKCUxe6JgojZm">
+<meta charset="UTF-8" data-page-node-id="9W8zcuMrXp07Mnb1F6AYBN">
+<meta name="viewport" content="width=device-width, initial-scale=1" data-page-node-id="uMojtcBwQzFcUWUSCCYdwg">
+<title>MolBench · 分子生物实验台</title>
+<link rel="stylesheet" href="assets/style.css" data-page-node-id="Ebcuj7L4uJHBnxHkbDcTHS">
+</head>
+<body data-page-node-id="kU89ZjWRWEftnHIJEETggM">
+
+<header class="top" data-page-node-id="OmLXz804Wk14PL5nOkNhTR">
+  <div class="wrap" data-page-node-id="Tn4ilJM1LRfcp2lbTdDida">
+    <div class="brand" data-page-node-id="Nn4rF3de2WHkzFPgJbI3tB">
+      <h1 data-page-node-id="WyftEFz0CmmECvX6cRDvBx">MolBench · 分子生物实验台</h1>
+      <span class="sub" data-page-node-id="V6JKfto06Dtt5vozpO4i0N">序列分析 · 酶切模拟 · 引物设计 · 实验计算</span>
+      <span class="badge-offline" data-page-node-id="MW3OJSGWM1S4yqenHMQeHi">离线可用 · 零依赖</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap" data-page-node-id="pVD3ETtboJ7KEj7vIdjfoc">
+
+  <!-- ============ 序列输入区（全局共享） ============ -->
+  <div class="card seqbar" data-page-node-id="GQ7EZEPErB8etdqpUsQVGr">
+    <h2 data-page-node-id="YytOeu2pIsEGuBzZV45xmk">① 序列输入 <span class="hint" data-page-node-id="WN7vGM2o9p6iCTnxBrtpW3">支持 FASTA / 裸序列 / 带行号文本，自动去除空格与数字</span></h2>
+    <div class="seqtools" data-page-node-id="HfrZofwQa83gWq7TsPHsc1">
+      <select id="exampleSel" title="加载内置示例" data-page-node-id="3HIEwtcRx9H06PZf31a0Ej">
+        <option value="" data-page-node-id="ECa23LMbGg51OC6dYKEg1G">— 载入示例序列 —</option>
+      </select>
+      <select id="histSel" title="最近使用过的序列（保存在本机浏览器，不会上传）" data-page-node-id="8OE8cx8QSQ7OqTlEBtAxma">
+        <option value="" data-page-node-id="hW2HMCIFUm20va7DjQttSF">— 历史记录 —</option>
+      </select>
+      <button id="btnHistClear" class="small" title="清空本机保存的历史序列" data-page-node-id="17LuEskr4h4l2N5JAWPkA2">清空历史</button>
+      <button id="btnDemoRandom" class="small" data-page-node-id="KJt3i6S1HqeBCNuV0gr21d">随机生成 2000 bp</button>
+      <button id="btnFile" class="small" data-page-node-id="rRMs5Xk9l2QcF7jJG5Av5U">打开本地文件…</button>
+      <button id="btnClear" class="small" data-page-node-id="ywPeUtv4MIsGl3v2PJakny">清空</button>
+      <label class="check" title="质粒等闭合环状 DNA 请勾选，酶切片段计算会按环状处理" data-page-node-id="3cJSNJtJJBOLBmzAzx4gWP">
+        <input type="checkbox" id="chkCircular" data-page-node-id="Pm1BtEoVQnc9VC3KFLOgoE"> 环状（质粒 / 载体）
+      </label>
+      <span style="flex:1" data-page-node-id="FDlRTKYFTfDlpHNWGyvmZP"></span>
+      <button id="btnCopySeq" class="small" data-page-node-id="J2qUNfQCXJilCZEw9u8HiC">复制序列</button>
+      <button id="btnDownloadSeq" class="small" data-page-node-id="h3uEALK7ZfEgpCQWpbkngY">导出 FASTA</button>
+      <button id="btnReport" class="small" title="把当前序列的全部分析结果导出为 Markdown，可直接贴进实验记录" data-page-node-id="7Mo967AaNIhWeXB1UiQgdG">导出分析报告 (.md)</button>
+    </div>
+    <textarea id="seqInput" aria-label="序列输入框" spellcheck="false" placeholder="在此粘贴序列，例如：&#10;>my_gene&#10;ATGGCCATTGTAATGGGCCGCTGAAAGGGTGCCCGATAG...&#10;&#10;也可以直接粘贴裸序列或带行号的文本，程序会自动清洗。"></textarea>
+    <div class="seqmeta" id="seqMeta" data-page-node-id="iajttxEYCf0t6JhP9bTTKW"></div>
+    <div class="warn" id="seqWarn" data-page-node-id="FPfIiYXtEBt9ZIfZxlmyTN"></div>
+    <input type="file" id="fileInput" aria-label="打开本地序列文件" accept=".fa,.fasta,.txt,.seq,.gb,.embl" style="display:none" data-page-node-id="mEquO5HKr3gC2tTD0KeTmt">
+  </div>
+
+  <!-- ============ Tabs ============ -->
+  <nav class="tabs" id="tabs" data-page-node-id="j9MrwV2aLELCemLmuvgO3k">
+    <button data-panel="overview" class="active" data-page-node-id="AfRBOWwXxCec7eiar3dHFu">序列概览</button>
+    <button data-panel="seqops" data-page-node-id="i9NDrAsFKOeb5LCxwj5RqY">序列操作 / ORF</button>
+    <button data-panel="protein">蛋白 &amp; 密码子</button>
+    <button data-panel="digest" data-page-node-id="yoSOmlgFGNQp5RRziO9M8V">酶切分析 &amp; 虚拟凝胶</button>
+    <button data-panel="primer" data-page-node-id="rQNFQaS8ztzDfi7i1yPeDA">引物 &amp; PCR</button>
+    <button data-panel="align" data-page-node-id="M9UsQJCKDXABP0GtIQniXS">序列比对</button>
+    <button data-panel="clone" data-page-node-id="eARpFvJs04Aww2NE2PboMQ">虚拟克隆</button>
+    <button data-panel="calc" data-page-node-id="TX5E294f1scGMKrxFVyp4c">实验计算器</button>
+    <button data-panel="help" data-page-node-id="JD1H4KhCTPoApkUgenmeY4">说明 / 算法出处</button>
+  </nav>
+
+  <!-- ============ 1. 概览 ============ -->
+  <section class="panel active" id="panel-overview" data-page-node-id="j4Z8YvIEwUk4q6tGV9W7ES">
+    <div class="card" data-page-node-id="1WySioUhFSzivhJFDtgBHW">
+      <h2 data-page-node-id="AaZJ6cpbArkzWH2byXJ00U">基本统计</h2>
+      <div class="stats" id="ovStats" data-page-node-id="VHSI6Cgr6taVxj9Cu22LaB"></div>
+    </div>
+
+    <div class="card" data-page-node-id="xCFwfmPtO6BQbcs5sMNN7n">
+      <h2 data-page-node-id="Otde8I1Z5IIB3WBwEPznzM">碱基 / 残基组成</h2>
+      <div id="ovComp" data-page-node-id="y7zaSJNl638W9TpZCkLKAR"></div>
+    </div>
+
+    <div class="card" data-page-node-id="DceucaCaaXrMM8CD6AyAbF">
+      <h2 data-page-node-id="laxSODRuBPxByQuJjMXD72">GC 含量滑动窗口 <span class="hint" data-page-node-id="xMygblCJvcGUpYjYR4t3mG">窗口内 GC% 沿序列的分布，可识别 GC 岛与 AT 富集区</span></h2>
+      <div class="row" style="margin-bottom:10px" data-page-node-id="T0cWa5QQMQwW5FrdIkSKSw">
+        <div class="field" data-page-node-id="4Ezn3jw9MztKsiV0aJe1gd"><span data-page-node-id="p0UqIIfsWBPK33AJUXdV2m">窗口大小 (bp)</span><input type="number" id="gcWin" value="100" min="5" step="10" style="width:110px" data-page-node-id="8J85nBFHWIutFFRnIgXV6f"></div>
+        <div class="field" data-page-node-id="AC83PksorvkwdWva8hr358"><span data-page-node-id="5sUgQUcvVff9xdfFkC8AHZ">步长 (bp)</span><input type="number" id="gcStep" value="10" min="1" step="5" style="width:100px" data-page-node-id="L6DIblYeUIKDVPNeviVVZQ"></div>
+        <button id="btnGcRedraw" class="small" data-page-node-id="HyxkFgYd5ZQixlp6h2U7Dx">重绘</button>
+      </div>
+      <div class="plotbox" data-page-node-id="YyGtqu0YkN8J4HcvxHJZxw"><canvas id="gcCanvas" class="plot" height="220" role="img" aria-label="GC 含量滑动窗口曲线" data-page-node-id="FGmqGgwwqoaWC8lQsiHhuk"></canvas></div>
+      <div class="plotcap" id="gcCap" data-page-node-id="Fwyyw8T9edXFYZtZFrzRyy"></div>
+    </div>
+
+    <div class="card" data-page-node-id="oBgHVXv8rUWvVlcjoZgESJ">
+      <h2 data-page-node-id="c5W6MAiCQSPBfwqlKEnPEG">序列条形码 <span class="hint" data-page-node-id="G8HIDqs2fZjCSDjk1KIHOc">每个碱基一色，长序列自动降采样；可直观看出重复与富集区</span></h2>
+      <div class="plotbox" data-page-node-id="1T1WChHhsjdj33enIVFBBj"><canvas id="barCanvas" class="plot" height="60" role="img" aria-label="序列条形码，每个碱基一色" data-page-node-id="oGaTwA4zvfHBzZ68hOTv6N"></canvas></div>
+    </div>
+
+    <div class="card" data-page-node-id="TEAAT3rux6G5HoKoEfh54H">
+      <h2 data-page-node-id="OVHL2W65IsyqsO85OuoooX">分子量与浓度换算</h2>
+      <div class="grid grid-2" data-page-node-id="GDGumTYEKNsQ1XajI5ScXh">
+        <div data-page-node-id="uWMzcIEZ2pfsKN7XLrtPwi">
+          <div class="section-title" data-page-node-id="2tPQFdDhrsG8us2JDqafNi">分子量（Da）</div>
+          <div class="kv" data-page-node-id="Y1wL4kzicuJXWnap4MuCEy"><span class="k" data-page-node-id="vOYf6P4KW23jiumkHoOe5P">单链 DNA（5′-OH）</span><span class="v" id="mwSsDna" data-page-node-id="R4l2yneAb7TYOQF4YMpTHX">—</span></div>
+          <div class="kv" data-page-node-id="4dnmYDtggB0cpf0Eu0Tf1Z"><span class="k" data-page-node-id="uDMxMCmBe23QSvUWbFdgUl">双链 DNA</span><span class="v" id="mwDsDna" data-page-node-id="OsF4QkEAAgJT23eHSEOE6L">—</span></div>
+          <div class="kv" data-page-node-id="Wav2LUZeGdM89ozRNZuE4t"><span class="k" data-page-node-id="KOScVixcXkE82SCxoMmSBz">单链 RNA</span><span class="v" id="mwRna" data-page-node-id="1L2KvBRBsxoKw2Ug1EfepN">—</span></div>
+          <div class="kv" data-page-node-id="Vevlb2gspt7RUbK1ETZl7E"><span class="k" data-page-node-id="HrwkNChmIWPlAbHWq9DNwe">蛋白质（按最长 ORF）</span><span class="v" id="mwProt" data-page-node-id="zlEcriVhQoL1LjWEH55zMf">—</span></div>
+          <div class="note" data-page-node-id="Xs7U8WP2CrWq9Fp03hSRxz">核酸残基质量：dA 313.21 / dC 289.18 / dG 329.21 / dT 304.20 Da，末端补 H₂O；双链按 A·T 对 617.41、G·C 对 618.39 Da。</div>
+        </div>
+        <div data-page-node-id="4GMM4bRYLYU78nqx0lKl90">
+          <div class="section-title" data-page-node-id="pvjkN8w2NP0LZsQyhWEVGX">OD₂₆₀ 定量</div>
+          <div class="row" data-page-node-id="a5B8Bx8MDvbR8vIsN5pAPV">
+            <div class="field" data-page-node-id="mq5ChnmWHcRE7ngZxbUMT9"><span data-page-node-id="k9MpPI6qyTq4dVSDWYtOZD">实测 A₂₆₀</span><input type="number" id="odVal" value="0.5" step="0.01" style="width:100px" data-page-node-id="6wtRDYR35fPfjJ2AbhLckx"></div>
+            <div class="field" data-page-node-id="FbH8E8EJMmBjLtthzXoGTV"><span data-page-node-id="f6dlgo8OihB15b6yLx7SO0">稀释倍数</span><input type="number" id="odDil" value="100" step="1" style="width:100px" data-page-node-id="qNh6ms9HfUnFuWq2xXvOgo"></div>
+            <div class="field" data-page-node-id="GTsKEVvc9jUacUpjZgHj2d"><span data-page-node-id="R2uVhna6r8CQLoAI0FZFu8">核酸类型</span>
+              <select id="odKind" style="width:120px" data-page-node-id="xH8uytFn0ovdR0FGPVB1CO">
+                <option value="dsDNA" data-page-node-id="JVi42JxfDxzFOHsadib9gW">双链 DNA</option>
+                <option value="ssDNA" data-page-node-id="ppz0MiNQCFq9uQtljlAGVT">单链 DNA</option>
+                <option value="ssRNA" data-page-node-id="RMamaJ5m2XZSMOkBd2CShU">RNA</option>
+              </select>
+            </div>
+          </div>
+          <div class="kv" data-page-node-id="NAmt5XFN8Jumqdgm3MeQWZ"><span class="k" data-page-node-id="Tz4BnoKV6X4G5sLQDISbGK">原液浓度</span><span class="v" id="odConc" data-page-node-id="xC2yKnasKu8YqpW3rMloqh">—</span></div>
+          <div class="kv" data-page-node-id="bsZPLhCLj1P2nksZXSJSEF"><span class="k" data-page-node-id="VBNO8JcEJIyR4fqTtZ4d13">摩尔浓度</span><span class="v" id="odNm" data-page-node-id="Y5iFqQVZTy3w6Y6W8nYL3N">—</span></div>
+          <div class="note" data-page-node-id="XzIs7zSf6mLp6Zn51sBBLK">换算系数：1.0 A₂₆₀ = 50 µg/mL dsDNA、33 µg/mL ssDNA、40 µg/mL RNA。</div>
+        </div>
+      </div>
+      <hr class="sep" data-page-node-id="0NGv5ItBO23hVLos8KCNRf">
+      <div class="section-title" data-page-node-id="IFUgHnnSWzRpSLC09UWxmq">质量 ⇄ 摩尔浓度互算</div>
+      <div class="row" data-page-node-id="CoxW0g76qAfBYsPNGc5V6Z">
+        <div class="field" data-page-node-id="Lb8SB2p2CMvbX1f3f3Oap1"><span data-page-node-id="8VcnBYtfZLe3pwvHnXzuRT">序列长度 (bp)</span><input type="number" id="ccLen" value="1000" step="1" style="width:110px" data-page-node-id="bI9LajxnOtsExBfeadDaQG"></div>
+        <div class="field" data-page-node-id="TJk5fETd586hbDFkBjjffA"><span data-page-node-id="uLLgrYsR5Cak3CsS0cHmQC">ng/µL</span><input type="number" id="ccNg" value="50" step="0.1" style="width:100px" data-page-node-id="a9ZO93XZNO3ISbFRRf1nm1"></div>
+        <div class="field" data-page-node-id="aKRxip06JmiC6mV33o6u5B"><span data-page-node-id="9udfGLZwCXocWinHXEWaXr">nM</span><input type="number" id="ccNm" value="0" step="0.01" style="width:110px" data-page-node-id="HhpffPQjsadSAX4sRG3Xra"></div>
+        <button id="btnCcFromNg" class="small" data-page-node-id="H2EESXq65cCqPH3FbSsBbH">ng/µL → nM</button>
+        <button id="btnCcFromNm" class="small" data-page-node-id="BgdxsaT1pmVf9lau81XxsI">nM → ng/µL</button>
+      </div>
+      <div class="note" id="ccOut" data-page-node-id="1ejz9gVH3wvHNnVkM5FVJy"></div>
+    </div>
+  </section>
+
+  <!-- ============ 2. 序列操作 ============ -->
+  <section class="panel" id="panel-seqops" data-page-node-id="vEWzwtFEGrfU6kCtvnKoqK">
+    <div class="card" id="featCard" style="display:none" data-page-node-id="ANDi38su3GFGRPrMqDxpHg">
+      <h2 data-page-node-id="KIxAHkunkMtBeL2sl1jjdn">序列注释（GenBank Features） <span class="hint" data-page-node-id="rCjGkd5CnxRSZ95quKtw1h">读取自 GenBank 文件的 FEATURES 段，点「查看」提取该区段的序列</span></h2>
+      <div class="tablewrap" data-page-node-id="NHMj14J0dRngakONmVqHjk">
+        <table class="tbl" id="featTbl" data-page-node-id="pf62jqXlWUrML2sd14BrDa">
+          <thead data-page-node-id="ajqwo4DOGhr10hdzdEbVnk"><tr data-page-node-id="GCVg8JT3B0perhDgYzOF4N">
+            <th data-page-node-id="bKMYENYNkYncJSTV33HDlz">类型</th><th data-page-node-id="8pJZbZKO86RLGAk31Y6wMt">位置</th><th class="num" data-page-node-id="2ez7ERZxsACgiJmV0LQyaA">区间</th><th data-page-node-id="YeO2bHmh9VqHe8anXaucBL">链</th>
+            <th data-page-node-id="XF4R20vvWh5bJNraI8HMjz">基因 / 产物</th><th class="num" data-page-node-id="pZCLwNG2MQr68MS1SEWOKb">长度</th><th data-page-node-id="mTInHZIAKjMFer3cuNWnAD"></th>
+          </tr></thead>
+          <tbody data-page-node-id="CuZHpz7iiQwZTuYfIrpwjV"></tbody>
+        </table>
+      </div>
+      <div class="section-title" id="featTitle" data-page-node-id="o1EKe4kIn1sX9tAnZ8jWGz">选中注释的序列</div>
+      <pre class="seqout" id="featSeq" data-page-node-id="m1X2qEjREYONlhDxPnNGPQ">在上方表格中点击「查看」。</pre>
+      <div class="note" id="featNote" data-page-node-id="O0Ear6x5x0j1DCAyfdkW4u"></div>
+    </div>
+
+    <div class="card" data-page-node-id="VP1Yn7FfSttmoK8bBj6VAQ">
+      <h2 data-page-node-id="cyGbwF8KQDWaP2FT4gR02e">反向互补 / 转录</h2>
+      <div class="row" style="margin-bottom:10px" data-page-node-id="FQ6ws88732AG4OrbafFjH8">
+        <button id="btnRevComp" data-page-node-id="vgEcc43JYrMXuTaquL57VE">反向互补</button>
+        <button id="btnComp" data-page-node-id="VTp9MEChmN3tweIhxl6rSP">互补（不反向）</button>
+        <button id="btnRev" data-page-node-id="ByOJmp6dbVRfLPTdBi9mdJ">反向（不互补）</button>
+        <button id="btnTranscribe" data-page-node-id="cVBh01g6ejV3gy3mYSmmkf">转录 T→U</button>
+        <button id="btnBackTranscribe" data-page-node-id="cgHrd8vaHjLDQWRebC5cPp">逆转录 U→T</button>
+        <button id="btnCopyOut" class="small" data-page-node-id="8LXy4ABb8OS2ZTQJaWDpNJ">复制结果</button>
+      </div>
+      <pre class="seqout" id="opOut" data-page-node-id="YfnRjOwXi4KFGubnI6qreZ">点击上方按钮生成结果。</pre>
+    </div>
+
+    <div class="card" data-page-node-id="n5AYLGMp62fFTnPyBCNBSO">
+      <h2 data-page-node-id="psK9pDdRToNWluR78uCInf">翻译 <span class="hint" data-page-node-id="numcjLtD4F7r1o2I54BTUh">标准遗传密码表（NCBI table 1）</span></h2>
+      <div class="row" style="margin-bottom:10px" data-page-node-id="ETL4Aj1iwqOFxGxQCAvL46">
+        <div class="field" data-page-node-id="by66UdV6WKfu8EBAsUfUq3"><span data-page-node-id="zJfLmHYOzUkcwHmD4miJYW">阅读框</span>
+          <select id="frameSel" style="width:170px" data-page-node-id="CXa8KqYEInIppXA4yj4G4f">
+            <option value="0" data-page-node-id="82XDSlhZTDbBM3hGLhRH4L">+1 正链第 1 框</option>
+            <option value="1" data-page-node-id="YJpWZhu421r07QsVmwislX">+2 正链第 2 框</option>
+            <option value="2" data-page-node-id="si27rpuHv1MNZTHDordRju">+3 正链第 3 框</option>
+            <option value="r0" data-page-node-id="v6OyAN8rNwi7BAXilX1mD1">−1 负链第 1 框</option>
+            <option value="r1" data-page-node-id="xSVL5HbxcrFkaNPBAbrOwV">−2 负链第 2 框</option>
+            <option value="r2" data-page-node-id="j929BS1jDOuvw9CFijbfwQ">−3 负链第 3 框</option>
+          </select>
+        </div>
+        <button id="btnTranslate" data-page-node-id="FeUZVGgNlzkzpBu54CbpmO">翻译</button>
+        <button id="btnCopyProt" class="small" data-page-node-id="EE5h8c0JpRtOVM1LIMAxdz">复制蛋白</button>
+      </div>
+      <pre class="seqout aa" id="protOut" data-page-node-id="04MbtyR3w203BGOzqTznUv">点击「翻译」生成氨基酸序列。</pre>
+    </div>
+
+    <div class="card" data-page-node-id="9P34EHnzfZcGE2KsfpberF">
+      <h2 data-page-node-id="s3UZtEmAFlFvautFq2BIol">开放阅读框 ORF <span class="hint" data-page-node-id="PyfjaBDKNtr1qLfzhBZUzt">六框扫描，以 ATG 起始、终止密码子结束</span></h2>
+      <div class="row" style="margin-bottom:10px" data-page-node-id="Op4K0BaCI8E9FYRaAzBIGC">
+        <div class="field" data-page-node-id="hMbGM7bzSJzd8GiiYt0M6k"><span data-page-node-id="Ht8bkZNEO5QhefhqlaPx02">最小氨基酸长度</span><input type="number" id="orfMinAa" value="60" min="1" step="10" style="width:100px" data-page-node-id="7Lj8LYLf0tvVBeOHaO1PFP"></div>
+        <button id="btnFindOrf" class="primary" data-page-node-id="29izqJlMSFDWa8LYfKuQhm">查找 ORF</button>
+      </div>
+      <div class="tablewrap" style="margin-bottom:12px" data-page-node-id="so7RvGUyvsBjRs7Lv1ed6p">
+        <table class="tbl" id="orfTbl" data-page-node-id="EyXIXg8xddSt2tldd6WGYp">
+          <thead data-page-node-id="K61abhls7TRFlNXwcQyf4M"><tr data-page-node-id="VwoKoV0qNLUYZX1JqqYvL7">
+            <th data-page-node-id="B6MDheaKvLeVcuU6UdYh03">#</th><th data-page-node-id="my6M1k1AjBalAH2tm4N09H">链</th><th data-page-node-id="4QJPiC8iHAwlPGjFsU6sVd">框</th><th class="num" data-page-node-id="eCyS30vPgLOGblQjErPJqQ">区间 (nt)</th>
+            <th class="num" data-page-node-id="3pYq8d3KmAXSMV4ifP3hjf">长度 (aa)</th><th data-page-node-id="Xi9HLAthGEo3n2xBEB6B7b">蛋白序列（前 40 aa）</th><th data-page-node-id="KrgzB7ysnHaxtbN3pU35VZ"></th>
+          </tr></thead>
+          <tbody data-page-node-id="gLgzm7KAxTAiEFAyny7Vj5"></tbody>
+        </table>
+      </div>
+      <div class="section-title" data-page-node-id="OjhPCX2g0JREIxUEzBiHYl">选中 ORF 的序列</div>
+      <pre class="seqout aa" id="orfProt" data-page-node-id="9YQziZA3O7ECA8eWebJjZL">在上方表格中点击「查看」。</pre>
+      <div class="section-title" data-page-node-id="SadlqoeFR0B0RVu3gdfCNd">对应核酸序列（含终止密码子）</div>
+      <pre class="seqout" id="orfNt" data-page-node-id="YCazsqpdtkcGeGy33bAjAw">—</pre>
+    </div>
+  </section>
+
+  <!-- ============ 2.5 蛋白 & 密码子 ============ -->
+  <section class="panel" id="panel-protein">
+    <div class="card">
+      <h2>蛋白序列来源 <span class="hint">理化性质与密码子优化共用这里的序列；可直接粘贴，也可从当前序列的最长 ORF 提取</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <button id="btnProtFromOrf" class="small">提取当前序列最长 ORF 的蛋白</button>
+        <button id="btnProtFromSeq" class="small" title="当前序列本身就是蛋白序列时使用">当前序列本身就是蛋白 → 填入</button>
+        <button id="btnProtClear" class="small">清空</button>
+      </div>
+      <div class="field">
+        <span>蛋白序列（单字母代码，可带 * 与 FASTA 头）</span>
+        <textarea id="protSeq" spellcheck="false" placeholder="如 MKTAYIAKQRQISFVKSHFSRQ…" style="min-height:88px;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel-2);resize:vertical"></textarea>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button id="btnProtAnalyze" class="primary">分析理化性质</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>理化性质 <span class="hint">pI 用 EMBOSS/Bjellqvist pKa 二分求解；不稳定指数 &gt; 40 提示体外不稳定（Guruprasad 1990）</span></h2>
+      <div class="stats" id="protStats"><span class="note">尚未分析。</span></div>
+      <div class="section-title">残基组成</div>
+      <div class="tablewrap" style="max-height:220px">
+        <table class="tbl" id="protCompTbl">
+          <thead><tr><th>残基</th><th class="num">数量</th><th class="num">占比</th><th>分类</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="note" id="protNote"></div>
+    </div>
+
+    <div class="card">
+      <h2>密码子优化 · 反向翻译 <span class="hint">按 E. coli K12 高表达偏好密码子逐残基选码，回译校验一致后才显示；并自动扫描优化产物中新出现的常用酶切位点</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <button id="btnCodonOpt" class="primary">生成 E. coli 优化序列</button>
+        <button id="btnCodonCopy" class="small">复制 DNA</button>
+        <button id="btnCodonToInput" class="small">载入为当前序列</button>
+      </div>
+      <div id="codonOut"><span class="note">尚未生成。</span></div>
+      <div class="section-title">优化后的 DNA（5′→3′）</div>
+      <pre class="seqout" id="codonDna">—</pre>
+      <div class="note">偏好密码子表：F-TTC / L-CTG / I-ATC / V-GTG / S-AGC / P-CCG / T-ACC / A-GCG / Y-TAC / H-CAC / Q-CAG / N-AAC / K-AAA / D-GAC / E-GAA / C-TGC / R-CGT / G-GGC。真实项目建议再结合 CAI 与 mRNA 二级结构做二次筛选。</div>
+    </div>
+  </section>
+
+  <!-- ============ 3. 酶切 ============ -->
+  <section class="panel" id="panel-digest" data-page-node-id="jGmRG5LHOjT9GsCGwS6YCD">
+    <div class="card" data-page-node-id="e679v7ALBnBE87DSeUSFWl">
+      <h2 data-page-node-id="0jihV7kCQyPUsPMlOVvjxQ">选择限制性内切酶 <span class="hint" data-page-node-id="x3DtDEqGQwa14653CmKOyM">共 51 种常用酶，支持简并位点（如 AvaI C^YCGRG）</span></h2>
+      <div class="row" style="margin-bottom:10px" data-page-node-id="3EFfGu5QOEmfTMivDiEA92">
+        <div class="field" data-page-node-id="HY5ZQacBeyxkxCD0AM0COz"><span data-page-node-id="tkrmh5AAj8zFnBVM0sHzTh">搜索酶名 / 位点</span><input type="text" id="enzSearch" placeholder="如 EcoRI、GGATCC" style="width:200px" data-page-node-id="cz35WtEGb1yxPPecpjMoLm"></div>
+        <div class="quick" data-page-node-id="Jf4IGFHMKF8yzIYFu6K1ov">
+          <button class="small" data-quick="common" data-page-node-id="edxis2LmRET4wgvNLHscmK">常用 8 种</button>
+          <button class="small" data-quick="mcs" data-page-node-id="5MVtt8k2TTSyU0hiZeDtJI">pUC19 MCS</button>
+          <button class="small" data-quick="zero" data-page-node-id="OiD2zFw238iNC2k6QDo7bG">切点数为 0 的酶</button>
+          <button class="small" data-quick="single" data-page-node-id="YB5CiIjCzC9F6JDor7qTSe">单切点酶</button>
+          <button class="small" data-quick="none" data-page-node-id="CqDb5vWdiue1BZPX7h5fcC">清空选择</button>
+        </div>
+      </div>
+      <div class="enzyme-list" id="enzList" data-page-node-id="vddfgw63gu0V8O5B51EwrV"></div>
+    </div>
+
+    <div class="card" data-page-node-id="8h4XmcBqH8d1pHvYGT0upv">
+      <h2 data-page-node-id="aSTqJDKGGHFLopkJGxp3i0">酶切位点线性图谱 <span class="hint" data-page-node-id="PjuAAfwGzrRBDrycIS0dNn">横轴为序列，竖线为切点（按酶着色），下方为 ORF 轨道；鼠标悬停切点看详情</span></h2>
+      <div class="plotbox" data-page-node-id="VEmcsvnSwJuDESMQWmAhxz"><canvas id="mapCanvas" class="plot" height="130" role="img" aria-label="酶切位点线性图谱，含 ORF 轨道" data-page-node-id="Ms1MsOCcXKFKZgAOTpluvT"></canvas></div>
+      <div class="plotcap" id="mapCap" data-page-node-id="HCSCdlAJau45rVuOGGjAD4"></div>
+    </div>
+
+    <div class="card" data-page-node-id="HZLot8gMFQSZB77XC7DaVa">
+      <h2 data-page-node-id="a6VKEhTZle1OMicRLynSEk">切点定位</h2>
+      <div class="tablewrap" data-page-node-id="3aMWIrP5GVFvnowuNm1re7">
+        <table class="tbl" id="siteTbl" data-page-node-id="QBu4sSFMVwt92Tk9t7QWXD">
+          <thead data-page-node-id="1yUkjCb27t1I9jZqmUPajr"><tr data-page-node-id="rskYi3waJXc6HIjDlIQFgH">
+            <th data-page-node-id="cyCAvGEcVg3VVEKIMZTgVD">酶</th><th data-page-node-id="pMPj8l7JJB5m4kKYt8A8UP">识别序列</th><th class="num" data-page-node-id="M0uskcNwUCRryyH8WAn2DU">识别起点</th><th class="num" data-page-node-id="2EAEiQJJMIpGl3twP03Nql">切割位置</th>
+            <th data-page-node-id="3MVVpAt91kV7w9cyBVzgSX">位点序列</th><th data-page-node-id="a2kgFREIyCjdhacJ4EnAaM">末端</th>
+          </tr></thead>
+          <tbody data-page-node-id="nTWx2IMxNNKbsgDDCAy624"></tbody>
+        </table>
+      </div>
+      <div class="note" data-page-node-id="osK7v6Eccl6PUBuZT5vfAg">切割位置＝切口前的碱基数（1-based 计法：切在第 n 与 n+1 位之间）。</div>
+    </div>
+
+    <div class="card" data-page-node-id="7FSDvCiOhCP8gxUROT8iFx">
+      <h2 data-page-node-id="kpE3I42bhJ8vKgYhs0CC4V">酶切片段 <span class="hint" id="digestModeHint" data-page-node-id="cFerKAicFNaUnapMIlc7y5"></span></h2>
+      <div class="tablewrap" style="margin-bottom:12px" data-page-node-id="szUk837YGj3Sm9J7GAiJFv">
+        <table class="tbl" id="fragTbl" data-page-node-id="6rl3BG0buNiUUN1HEOOgAH">
+          <thead data-page-node-id="NbqnXjJTx9cTEAvWZbxoFO"><tr data-page-node-id="325Y0HvBQnOSMuhXFw4CMt">
+            <th class="num" data-page-node-id="vQ7azVo7OvOQ3QkEWMqdKm">#</th><th class="num" data-page-node-id="Sz4enEGIesEf4dFzvaATlb">长度 (bp)</th><th class="num" data-page-node-id="7skDRfc0knnXtNYJZHAaaC">占比</th>
+            <th class="num" data-page-node-id="WN3pGqG68qN73ppqeuwDHP">预计 1% 琼脂糖迁移距离</th><th data-page-node-id="ZN6Xjeh2WprSjHC7Z6c6fI">条带预估</th>
+          </tr></thead>
+          <tbody data-page-node-id="ycvXbIWn0kRiraJGZCYjEF"></tbody>
+        </table>
+      </div>
+      <div class="note" id="fragSummary" data-page-node-id="cxxcV7g1jtFBLSyyWNSQRV"></div>
+    </div>
+
+    <div class="card" id="plasmidCard" style="display:none" data-page-node-id="JbJcrB1xOpI7rYvMO7KeMc">
+      <h2 data-page-node-id="kYUvtyL2yObjRCbEL7EC37">质粒环形图谱 <span class="hint" data-page-node-id="XnBpIuKsfmAzonMbrNkOib">外圈为序列与刻度，径向刻度为酶切位点（按酶着色），内圈为 ORF（正链在外 / 负链在内）</span></h2>
+      <div class="plotbox" data-page-node-id="Mi3mzNGjzAOVhqN1KfxFQQ"><canvas id="plasmidCanvas" class="plot" height="560" role="img" aria-label="质粒环形图谱，含酶切位点与 ORF" data-page-node-id="p22xWCXNgRYIoWcBwYhpc6"></canvas></div>
+      <div class="plotcap" id="plasmidCap" data-page-node-id="Hugz6sl6b59i4jSlRUOG7n"></div>
+    </div>
+
+    <div class="card" data-page-node-id="t6PSmQ7mvkDIzzCrY5jDtA">
+      <h2 data-page-node-id="UWsKduXxUkODZ1JKHCAes3">虚拟琼脂糖凝胶 <span class="hint" data-page-node-id="jYvVhTP2zouw16oCt2v6mc">按 log₁₀(片段长度) 反比迁移，条带亮度按片段质量分配</span></h2>
+      <div class="row" style="margin-bottom:10px" data-page-node-id="8dC00SGx8rSF7O1PW6LR5l">
+        <div class="field" data-page-node-id="KxVDYg9qCQPCz9f2noHWro"><span data-page-node-id="cZm1cmNyqOawOoiwiuA2tD">凝胶浓度</span>
+          <select id="gelPct" style="width:150px" data-page-node-id="X4pWGHC4UmIXTR3jGdsjXs">
+            <option value="0.7" data-page-node-id="SZtBHO6Csl9y89BCPFWm97">0.7% 琼脂糖</option>
+            <option value="1" selected data-page-node-id="vj7BZfo1BEOSXBOtASxH6E">1.0% 琼脂糖</option>
+            <option value="1.5" data-page-node-id="5VK9Ewd2nJxAKeELipH0vf">1.5% 琼脂糖</option>
+            <option value="2" data-page-node-id="1r7HXNuaXZuvneWVpK035C">2.0% 琼脂糖</option>
+          </select>
+        </div>
+        <label class="check" data-page-node-id="ejs9pqte1J1zzy4SWalVF8"><input type="checkbox" id="gelPerEnzyme" checked data-page-node-id="J0s5qhFiN8ihxhRv2GJZqA"> 每个酶单独一条泳道</label>
+        <label class="check" data-page-node-id="V3Oo0ZtBGLafmdquWLP0YE"><input type="checkbox" id="gelLabel" checked data-page-node-id="SsLfbFwDUimHC23yCifLTk"> 标注片段大小</label>
+        <button id="btnGelPng" class="small" data-page-node-id="JNOvyvZ7JqgAbxOLsI6p5V">保存为 PNG</button>
+      </div>
+      <div class="plotbox" data-page-node-id="eNGrt2dYZMHCrz1gYaH1Xa"><canvas id="gelCanvas" class="plot" height="440" role="img" aria-label="虚拟琼脂糖凝胶电泳图" data-page-node-id="eQD8ISQuypl0qZI1bJOHit"></canvas></div>
+      <div class="plotcap" data-page-node-id="7J1O0MlhwNfQsd1E3IDRJ6">泳道 1 为 DNA Ladder 参照；贴顶的淡带＝片段过大未进入分离范围，贴底的淡带＝已跑出胶外，此时应改用更低或更高浓度的琼脂糖。<b data-page-node-id="GjMU68JvbLbMSfjNEjMnhG">未酶切的环状质粒</b>在胶上呈三条带：<b data-page-node-id="gFlTVDq61vdoYOYrJT982q">SC</b> 超螺旋（跑得最快）、<b data-page-node-id="RwQoiTyb25M5vq8WlkFEHT">LIN</b> 线性、<b data-page-node-id="KgXA2y816AJX4sF5HRIE4k">OC</b> 开环/切口（最慢），图中按经验系数折算其表观迁移位置。实际迁移率仍受电泳条件与染料影响，仅供判断。</div>
+    </div>
+
+    <div class="card">
+      <h2>Motif / 模式搜索 <span class="hint">支持 IUPAC 简并碱基（如 R=A/G、Y=C/T、N=任意），找启动子、RBS、polyA 信号等任意模式，环状序列自动识别跨接缝命中</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <div class="field"><span>模式（IUPAC）</span><input type="text" id="motifPat" placeholder="如 AATAAA" style="width:220px;font-family:var(--mono)"></div>
+        <div class="field"><span>常用预设</span>
+          <select id="motifPreset" style="width:250px">
+            <option value="">— 选择预设 —</option>
+            <option value="TATAAT">-10 区（Pribnow box）TATAAT</option>
+            <option value="TTGACA">-35 区 TTGACA</option>
+            <option value="AGGAGG">RBS（Shine-Dalgarno）AGGAGG</option>
+            <option value="AATAAA">polyA 加尾信号 AATAAA</option>
+            <option value="GCCACC">Kozak 核心 GCCACC</option>
+            <option value="AAGCTT">HindIII 位点 AAGCTT</option>
+            <option value="GTYRAC">简并示例 GTYRAC</option>
+          </select>
+        </div>
+        <label class="check"><input type="checkbox" id="motifBoth" checked> 同时搜索负链</label>
+        <button id="btnMotif" class="primary">搜索</button>
+      </div>
+      <div class="tablewrap">
+        <table class="tbl" id="motifTbl">
+          <thead><tr><th class="num">#</th><th class="num">位置（1-based）</th><th>链</th><th>命中序列</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="note" id="motifOut">模式可含简并碱基：R Y S W K M B D H V N。命中数过多时仅显示前 500 条。</div>
+    </div>
+
+    <div class="card">
+      <h2>双酶切兼容性速查 <span class="hint">挑两个酶，立刻看到各自切点数、末端形态、是否同尾兼容、联合酶切片段——双酶切克隆选酶不再靠翻表</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <div class="field"><span>酶 A</span><select id="ddEnzA" style="min-width:190px"></select></div>
+        <div class="field"><span>酶 B</span><select id="ddEnzB" style="min-width:190px"></select></div>
+        <button id="btnDD" class="primary">比较</button>
+      </div>
+      <div id="ddOut"><span class="note">尚未比较。</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 4. 引物 ============ -->
+  <section class="panel" id="panel-primer" data-page-node-id="SOUbRy15sJ8gGuV51YpgPA">
+    <div class="card" data-page-node-id="fB3mBnOlnMIozt7FBAM1Na">
+      <h2 data-page-node-id="ePSnSYvgXc6C0BeIL9WLIE">自动引物设计 <span class="hint" data-page-node-id="2lTk83sWRsClRb3zIyOnrF">在目标区域两端搜索候选引物，按 Tm / GC / 二级结构 / 模板唯一性打分排序，点「使用」填入下方</span></h2>
+      <div class="row" data-page-node-id="ghXvXyvvU0kC979OHdn6Oo">
+        <div class="field" data-page-node-id="t69Xh2aAoK6lTkPOSyudpE"><span data-page-node-id="S8kN5K6t0dNUg0HPH5Zwqt">目标区域起点</span><input type="number" id="dzStart" value="1" min="1" style="width:96px" data-page-node-id="Dj9TNGHNEkJ9iMFD4Xo81U"></div>
+        <div class="field" data-page-node-id="OarLX0LP3ELYLrIOtsBDZp"><span data-page-node-id="ouSAsqZeLmAiQsMStj2knm">目标区域终点</span><input type="number" id="dzEnd" value="" placeholder="默认全长" style="width:110px" data-page-node-id="clLMntgUd8yfaM89di5AQ7"></div>
+        <div class="field" data-page-node-id="cd19MVSLNwJbcbkhqfVrGV"><span data-page-node-id="Zsx0Vx5Phm7qu58VgaOkxt">引物长度 (nt)</span><input type="number" id="dzMinLen" value="18" min="15" style="width:70px" data-page-node-id="oP5PcEh46fqsn7w5zRfNx5"> – <input type="number" id="dzMaxLen" value="27" max="40" style="width:70px" data-page-node-id="xZ7rMWRrlbCu2u7JzLmb4z"></div>
+        <div class="field" data-page-node-id="Toi0jeLLeBtbV86oeNDsVu"><span data-page-node-id="9zneIex8VAGfTJQeqhXhRm">Tm 范围 (°C)</span><input type="number" id="dzMinTm" value="55" style="width:70px" data-page-node-id="KV5rPAXkJRQGcRsPKLsQtI"> – <input type="number" id="dzMaxTm" value="65" style="width:70px" data-page-node-id="cpB4jjr94CMJS8EQLXoJwC"></div>
+        <div class="field" data-page-node-id="due5DSWCOHX8LXwgsivsG6"><span data-page-node-id="b7nNTppsCyQMLcA463It0v">GC% 范围</span><input type="number" id="dzMinGc" value="40" style="width:70px" data-page-node-id="hjejOyyXdXCPSIHfO64Eqj"> – <input type="number" id="dzMaxGc" value="60" style="width:70px" data-page-node-id="PzuEhcwNa9oeorz5iqhgEU"></div>
+        <div class="field" data-page-node-id="pNBsalbqVYOIXrWv6iQXGs"><span data-page-node-id="fu0nD22EB5A6DB2FZ7rafx">产物上限 (bp)</span><input type="number" id="dzMaxProd" value="4000" style="width:100px" data-page-node-id="X4dSFjXnK6T0I48eh8Rm7Y"></div>
+        <button id="btnDesign" class="primary" data-page-node-id="HUCecUmKxYVhHGxEmgbz0b">设计引物</button>
+      </div>
+      <div class="tablewrap" style="margin-top:12px" data-page-node-id="SvWJYK7dscP74ZoPVCUbBB">
+        <table class="tbl" id="dzTbl" data-page-node-id="MstEcOBCA8CBp3rXyWQLKb">
+          <thead data-page-node-id="kCZb0kC3cE6vPPTRUPdPGo"><tr data-page-node-id="Bj19V9fLFEpflUfdwUYoXB">
+            <th class="num" data-page-node-id="xor7q62pj3Ccxwu0L0EprL">#</th><th data-page-node-id="EWGgZzoxwGqmP0vlMyaBrG">正向引物 (5′→3′)</th><th data-page-node-id="1oOrQ8wynEoxZ3WG5GBJZz">反向引物 (5′→3′)</th>
+            <th class="num" data-page-node-id="XAAnVRmAtJYJvrqD6mlGjH">产物 (bp)</th><th class="num" data-page-node-id="ZAHFkSFFdEHBIDT3dbyA7N">Tm F / R (°C)</th>
+            <th class="num" data-page-node-id="zch3D8WhCCdnPJQyxB0cx0">引物 GC% F / R</th><th class="num" data-page-node-id="GvR2J5kcEo7takpQaXQCbL">模板局部 GC%</th>
+            <th class="num" data-page-node-id="KHPf8pmcHrvsQEVXRIIjrW">交叉 ΔG</th><th class="num" data-page-node-id="atHsrPW0d0P7tllQbE6K9G">评分</th><th data-page-node-id="WqnxDlbIyfDYZEmQORHCHv"></th>
+          </tr></thead>
+          <tbody data-page-node-id="pTPQYJBuemBgWLPJoXN5da"></tbody>
+        </table>
+      </div>
+      <div class="note" id="dzOut" data-page-node-id="NjwgRcWsn60DlAmeQc31LU">留空「目标区域终点」则默认使用整条序列：正向引物取自开头，反向引物取自结尾。</div>
+    </div>
+
+    <div class="card">
+      <h2>定点突变引物 <span class="hint">Q5® SDM 型设计：突变放在正向引物 5′ 端，两条引物 5′ 端背靠背，PCR 扩增整个载体后经 KLD（激酶-连接酶-DpnI）处理即得突变质粒</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <div class="field"><span>突变起点（1-based）</span><input type="number" id="mutPos" value="" placeholder="如 750" min="1" style="width:100px"></div>
+        <div class="field"><span>被替换碱基数</span><input type="number" id="mutOld" value="1" min="0" style="width:90px"></div>
+        <div class="field"><span>替换为（留空＝缺失）</span><input type="text" id="mutNew" placeholder="如 G" style="width:130px;font-family:var(--mono)"></div>
+        <div class="field"><span>退火区目标 Tm (°C)</span><input type="number" id="mutTm" value="62" step="1" style="width:90px"></div>
+        <button id="btnMut" class="primary">设计突变引物</button>
+      </div>
+      <div id="mutOut"><span class="note">在上方全局序列输入区放入模板（质粒请勾选「环状」），然后指定突变。支持点突变、连续替换、插入与缺失。</span></div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnMutToPrimers" class="small">填入下方引物输入框</button>
+      </div>
+    </div>
+
+    <div class="card" data-page-node-id="usD7rUOeqM7zE5fL9vYNSJ">
+      <h2 data-page-node-id="uQouCccPL82BVH4b3MteFq">引物输入</h2>
+      <div class="grid grid-2" data-page-node-id="FeDDJf2kbBMzbC69Y00BOU">
+        <div class="field" data-page-node-id="LigDVIkgQiCPwOdf236bXa">
+          <span data-page-node-id="ncVYij9votjXNOqfXpMxf8">正向引物 (5′→3′)</span>
+          <input type="text" id="prFwd" placeholder="如 GTAAAACGACGGCCAGT" style="font-family:var(--mono)" data-page-node-id="cHofAWKyY4Auz9vJyTg0nl">
+        </div>
+        <div class="field" data-page-node-id="82HqEOC6Nh84fIHkzZxOAb">
+          <span data-page-node-id="doQ5wleCYB00txbIu3ikNT">反向引物 (5′→3′)</span>
+          <input type="text" id="prRev" placeholder="如 CAGGAAACAGCTATGAC" style="font-family:var(--mono)" data-page-node-id="tBJzpJWkrMAKS6ysRFtiOQ">
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px" data-page-node-id="icr8BQzndzh8Bv6ckDXMIf">
+        <div class="field" data-page-node-id="mPxJMu10DksqcLrIrnjftn"><span data-page-node-id="XangM9y1TPAwiDm7UA5vT6">引物总浓度 (nM)</span><input type="number" id="prConc" value="500" step="50" style="width:100px" data-page-node-id="C90kz7AAwfjYcMFoe62dkt"></div>
+        <div class="field" data-page-node-id="93BrUUFoA7vPqI3BbNRHJA"><span data-page-node-id="5s5KUg0nznFwKP5pasVECx">Na⁺ (mM)</span><input type="number" id="prNa" value="50" step="5" style="width:90px" data-page-node-id="qcUVkFJW6BHaHqQpV5TmUd"></div>
+        <div class="field" data-page-node-id="ulUK0n4EoBgC1YkaKaXIoa"><span data-page-node-id="HLAGRExiIyYZscaLQtmJMD">Mg²⁺ (mM)</span><input type="number" id="prMg" value="1.5" step="0.5" style="width:90px" data-page-node-id="5E39TgZIaTBkimbO0f7JNI"></div>
+        <div class="field" data-page-node-id="E5Bt94tWF7LrdUtFT7meu4"><span data-page-node-id="Ei8sCpsgRb85ZiaZIeAGuZ">dNTP (mM)</span><input type="number" id="prDntp" value="0.2" step="0.05" style="width:90px" data-page-node-id="dsD6HQ2CwBV4lbO9YqW7G2"></div>
+        <button id="btnPrimer" class="primary" data-page-node-id="5ASJJ4TSTh9oQr1Xyc6bd9">分析引物</button>
+        <button id="btnPickFromTpl" class="small" data-page-node-id="8rWuY5emb0FqQupAs7AvCf">从模板自动挑一对引物</button>
+      </div>
+    </div>
+
+    <div class="card" data-page-node-id="bAYu8baCNd2CfWE3HWcZ8k">
+      <h2 data-page-node-id="c32iAdvYuZGXjladvS6mbs">引物参数</h2>
+      <div class="tablewrap" data-page-node-id="T2rbbYNDdhTsVzm5VVFWEV">
+        <table class="tbl" id="prTbl" data-page-node-id="AQqpEAdfUs1hEOhUnUt4Qr">
+          <thead data-page-node-id="dAKINrEp8bb4I58irwwqXn"><tr data-page-node-id="QYKGmdG4yYRdrxoN25SWNR">
+            <th data-page-node-id="Kbz5xhkaPIV8eVkLxngGx4">引物</th><th class="num" data-page-node-id="hE8tPHZLJjGt2Wq1hNzRrM">长度</th><th class="num" data-page-node-id="ZHLFfOYF6Aj80OewwKA1DA">GC%</th>
+            <th class="num" data-page-node-id="GQH4nx54xkBHhdon6l8mkq">Tm 最近邻</th><th class="num" data-page-node-id="VRk3w6j2O3d4MiMdxGJEyD">Tm GC 式</th><th class="num" data-page-node-id="8iVYbJGUbdmIifG9B9TiZn">Tm Wallace</th>
+            <th class="num" data-page-node-id="3CrZnUUkMznANA1iPdKywL">MW (Da)</th><th data-page-node-id="oObymz3ZQMABOCiFoVAcJ1">3′ 端</th><th data-page-node-id="tHj9CtkSjvS4wTki5gMlJj">GC 夹</th>
+          </tr></thead>
+          <tbody data-page-node-id="8Q6GF8uTGQu0f6PDcJ1Kpx"></tbody>
+        </table>
+      </div>
+      <div class="note" data-page-node-id="n5ctWWsuUNvR4ETdFvB4wL">最近邻法采用 SantaLucia (1998) 统一参数 + Owczarzy (2004) 盐校正，是设计引物时推荐采用的 Tm；Wallace 规则仅适用于 &lt;14 nt 的短寡核苷酸。</div>
+    </div>
+
+    <div class="card" data-page-node-id="qWMW3s5qOm4N1HzRF8IKw5">
+      <h2 data-page-node-id="VFIEwSWgFrH4SaHZY55KVn">二级结构与非特异风险</h2>
+      <div id="prRisk" data-page-node-id="7Pr90mS5bdkec0dGanwElq"></div>
+    </div>
+
+    <div class="card" data-page-node-id="7tIJCNPVBpD3AlgaxNsiL6">
+      <h2 data-page-node-id="Im53POjnxOxzw1yY1cxRDV">PCR 产物预测</h2>
+      <div id="pcrOut" data-page-node-id="lmCQnvgzrwEMR5a5qncThQ"></div>
+      <div class="section-title" data-page-node-id="SC825Dau55GhJiSwhPisgI">产物序列</div>
+      <pre class="seqout" id="pcrSeq" data-page-node-id="OlbpENJvHDX4REY0f7NIOQ">—</pre>
+      <div class="row" style="margin-top:8px" data-page-node-id="1u3cnUFrCVAsoHE73oTsC7">
+        <button id="btnCopyPcr" class="small" data-page-node-id="jDawrjOZCzvx4ApKgFB4vH">复制产物</button>
+        <button id="btnPcrToInput" class="small" data-page-node-id="arcxPL2bZLsPV5B26LL1UP">产物载入为当前序列</button>
+      </div>
+    </div>
+
+    <div class="card" data-page-node-id="8cYSF3c8px4xe6msFEtPzL">
+      <h2 data-page-node-id="5A1yi9K3RZxjhLi7eKFZZp">推荐 PCR 程序</h2>
+      <div id="pcrProgram" data-page-node-id="GyQevA3uZr3X1khB0I82cG"></div>
+    </div>
+  </section>
+
+  <!-- ============ 序列比对 ============ -->
+  <section class="panel" id="panel-align" data-page-node-id="OXuBz2dFdhpAkql1nQHODP">
+    <div class="card" data-page-node-id="eHHYjBLXukg9PLlM5F9Us9">
+      <h2 data-page-node-id="3d5WY8FWLfnvkXI1b9RxuM">双序列全局比对 <span class="hint" data-page-node-id="uD8nkpMJ29aIa6si9bickG">Needleman-Wunsch 全局比对，线性 gap 罚分；用于核对测序结果与参考序列</span></h2>
+      <div class="grid grid-2" data-page-node-id="uBKr7L44oHj2FpyQ59bl2F">
+        <div class="field" data-page-node-id="NQJuogvnuInaa9fY0k0tQb"><span data-page-node-id="7xC13ctSSkYd68FYFVQQht">序列 A（参考序列）</span>
+          <textarea id="alnA" spellcheck="false" placeholder="粘贴参考序列" style="min-height:120px;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel-2);resize:vertical"></textarea>
+        </div>
+        <div class="field" data-page-node-id="xSt7ccbVYf4XVrGuPfpVaK"><span data-page-node-id="ACTTGP87B8oD6M3KPYG7hP">序列 B（待比较，如测序结果）</span>
+          <textarea id="alnB" spellcheck="false" placeholder="粘贴待比较序列" style="min-height:120px;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel-2);resize:vertical"></textarea>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px" data-page-node-id="3eKDoJThN0T4dt6pSuyCHK">
+        <button id="btnAlnFillA" class="small" data-page-node-id="KvZOF4UMVP97UjGSGO2WLS">当前序列 → A</button>
+        <button id="btnAlnFillB" class="small" data-page-node-id="9LZUOzh6lcBB6tQrqvlQOD">当前序列 → B</button>
+        <button id="btnAlnSwap" class="small" data-page-node-id="UrArWDuJ8LqBPPjEVJp0ZJ">交换 A ⇄ B</button>
+        <button id="btnAlnDemo" class="small" data-page-node-id="0yWDPhFPQMiGCtAPyB5sFF">载入演示对</button>
+        <button id="btnAlnMultiDemo" class="small" data-page-node-id="FCsaG8N0sbFKv2A1xpKtLb">载入多序列演示</button>
+        <div class="field" data-page-node-id="mYMONuoDRFdumDQCFFK4Da"><span data-page-node-id="yg55DCoyOHQkIqTetjYwXq">匹配</span><input type="number" id="alnMatch" value="2" step="1" style="width:70px" data-page-node-id="qaolavhal8uslQCj3iCWMr"></div>
+        <div class="field" data-page-node-id="lMmrrm7hBBwFpFea0OzzGB"><span data-page-node-id="QYiTtNoEIt64GNPuxUD67m">错配</span><input type="number" id="alnMis" value="-1" step="1" style="width:70px" data-page-node-id="Z30tjAP0aRA7NySt3HutD2"></div>
+        <div class="field" data-page-node-id="PfWqsYiaGkYLjsylUMAQvj"><span data-page-node-id="1qGfFAke8Xr66R9G9iapjh">gap</span><input type="number" id="alnGap" value="-2" step="1" style="width:70px" data-page-node-id="VL37GjlbuQwezqMuESa2Hq"></div>
+        <button id="btnAlign" class="primary" data-page-node-id="j4WfIhza59wKJHyphKA6uo">开始比对</button>
+      </div>
+      <div class="note" data-page-node-id="WWVt4OMCU38D43e7coyKum">
+        两条序列走双序列全局比对；<b data-page-node-id="rDuHnr8eAez6jqk7iO7L5l">把 3 条以上序列（或含多条 FASTA 记录）一起贴进 A 框，会自动切换为多序列比对</b>，
+        以「|」标出所有序列完全一致的列。
+        序列首尾若有未比对的悬垂会以 gap 形式计入，比对扩增产物时建议先截齐两端。
+      </div>
+    </div>
+
+    <div class="card" data-page-node-id="GXskvlA14PmATeG7KjTELp">
+      <h2 data-page-node-id="Tfpt2oHOP7kuDN2gVgShRv">比对结果</h2>
+      <div id="alnStats" data-page-node-id="ukXCXdQPh4znHETrYq0vrQ"><span class="note" data-page-node-id="clVI99bhKCOlZCrq2xyQKc">尚未比对。</span></div>
+      <div class="section-title" data-page-node-id="vzASCNRiolAPjkl4FFFN2c">比对视图（每 60 列一行，中缀 <code class="inline" data-page-node-id="414oZxhKCs6jMqoQQK53g0">|</code> 表示一致）</div>
+      <pre class="seqout" id="alnOut" style="max-height:520px" data-page-node-id="FRX7YCY0JHPRKvrAAbZdnQ">—</pre>
+    </div>
+  </section>
+
+  <!-- ============ 虚拟克隆 ============ -->
+  <section class="panel" id="panel-clone" data-page-node-id="iZmecKaREKlE5yNZCHatif">
+    <div class="card" data-page-node-id="5GnT2k6X2ZQPlTWxdnulNk">
+      <h2 data-page-node-id="qXEFhWZgZZLy7jWFEWEdWP">虚拟克隆 <span class="hint" data-page-node-id="jBXLi07suhdqgCEA1KUeXG">载体与插入片段分别酶切 → 各选一段 → 检查黏端是否互补 → 得到重组序列</span></h2>
+      <div class="grid grid-2" data-page-node-id="EZNvG9WaP7ZWOUSN5XTp4z">
+        <div class="field" data-page-node-id="k7vxZTFXjGWiXbO9W1qMxW">
+          <span data-page-node-id="MGUniJHxG9E4HpXYBo1Mjn">载体序列（按环状处理）</span>
+          <textarea id="clBackSeq" spellcheck="false" placeholder="粘贴载体序列，或点下方「当前序列 → 载体」" style="min-height:110px;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel-2);resize:vertical"></textarea>
+          <div class="row" style="margin-top:8px" data-page-node-id="8ibaVWuND9B3EfhnCoOQcC">
+            <button id="btnClBackFromSeq" class="small" data-page-node-id="bAfS4Ogf2uDbQMy1HB9jND">当前序列 → 载体</button>
+            <div class="field" data-page-node-id="x3jqhkHZHBmv8rgMrAs5ZJ"><span data-page-node-id="RvoiYhYQxDyOwWT3TwJKaF">载体酶切</span><select id="clBackEnz" style="min-width:170px" data-page-node-id="FAFsECZAVOSHGwvHerJgW7"></select></div>
+            <div class="field" data-page-node-id="SDctXLCPqpWEUA1LkrtNYL"><span data-page-node-id="NWumVCOQxvgLemXeYjcMIF">取骨架片段</span><select id="clBackFrag" style="min-width:190px" data-page-node-id="DCXhLOQh4iW1y6Et2BehHj"></select></div>
+          </div>
+        </div>
+        <div class="field" data-page-node-id="R4ZmUOlQO7ABL0rEafGwhJ">
+          <span data-page-node-id="tV4chCh06O1MSUBT4VfVDX">插入片段序列（按线性处理）</span>
+          <textarea id="clInsSeq" spellcheck="false" placeholder="粘贴插入片段（如 PCR 产物），或点下方「当前序列 → 插入」" style="min-height:110px;font-family:var(--mono);font-size:12px;padding:8px 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--panel-2);resize:vertical"></textarea>
+          <div class="row" style="margin-top:8px" data-page-node-id="eyLXzY2421zKcY880AOCDn">
+            <button id="btnClInsFromSeq" class="small" data-page-node-id="2oQ8ptIdpQgeh1OpMPhkw7">当前序列 → 插入</button>
+            <div class="field" data-page-node-id="gwHhjcFGtWkfZo61HEWYIh"><span data-page-node-id="MwqH8W8Bf0pKk1WBvtjVrd">插入酶切</span><select id="clInsEnz" style="min-width:170px" data-page-node-id="RKqWyAGfqh1OQ9o4rl4Q52"></select></div>
+            <div class="field" data-page-node-id="UapqvfwrcuSvs7P7Xutjit"><span data-page-node-id="QPUjrwsOVEDXpqzf1oC7pU">取插入片段</span><select id="clInsFrag" style="min-width:190px" data-page-node-id="kATHudctc779hufdXnLOAF"></select></div>
+          </div>
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px" data-page-node-id="aeVS6havyHGmF8ZkpX1bGB">
+        <button id="btnClone" class="primary" data-page-node-id="1nP4nktysXkAtYuRA7OzNs">模拟连接</button>
+        <button id="btnClSwap" class="small" data-page-node-id="qxApH1s9eMgredzwK8WosW">与「当前序列」互换</button>
+      </div>
+      <div class="note" data-page-node-id="XKTlbiTvxT2VfofL0aYlU9">
+        默认把载体当环状、插入当线性——这正是质粒亚克隆的常见情形。
+        「不酶切」表示该侧保留完整序列（用于 PCR 产物两端已带酶切位点的情况）。
+      </div>
+    </div>
+
+    <div class="card" data-page-node-id="YN4CzJKESr2NlsW6rUsPbx">
+      <h2 data-page-node-id="xCx1eHfDBlK7l5omeECucv">连接结果</h2>
+      <div id="clOut" data-page-node-id="GdJ1p8aBc6fSaApoUIbLXG"><span class="note" data-page-node-id="tZyHCDUkiNnDcCUFG1kJ7L">尚未模拟。</span></div>
+      <div class="section-title" data-page-node-id="SEDFdd1lssBz1fcm8OgxZn">重组序列</div>
+      <pre class="seqout" id="clSeq" style="max-height:420px" data-page-node-id="IdWmzS5IaEY6BmAkmUvOMv">—</pre>
+      <div class="row" data-page-node-id="dW7dJLZuE5oD9KWvtYgrJz">
+        <button id="btnClCopy" class="small" data-page-node-id="AxlrijeOADTcC7sTxFeze8">复制重组序列</button>
+        <button id="btnClToInput" class="small" data-page-node-id="jhnVjdRvnQBuX5WEshNnIH">载入为当前序列</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>连接反应用量计算 <span class="hint">按 插入:载体 摩尔比计算各需多少 ng / µL；双链 DNA 按 660 g/mol/bp 折算</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <button id="btnLigFill" class="small" title="把上方选好的骨架/插入片段长度填进来">按所选片段填入长度</button>
+      </div>
+      <div class="grid grid-3">
+        <div class="field"><span>载体长度 (bp)</span><input type="number" id="ligVecBp" value="5000" min="1" style="width:110px"></div>
+        <div class="field"><span>插入长度 (bp)</span><input type="number" id="ligInsBp" value="1000" min="1" style="width:110px"></div>
+        <div class="field"><span>摩尔比（插入 : 载体）</span><input type="number" id="ligRatio" value="3" min="0.1" step="0.5" style="width:110px"></div>
+        <div class="field"><span>载体用量 (ng)</span><input type="number" id="ligVecNg" value="50" min="0" step="5" style="width:110px"></div>
+        <div class="field"><span>载体浓度 (ng/µL，可空)</span><input type="number" id="ligVecConc" value="" min="0" step="1" style="width:130px"></div>
+        <div class="field"><span>插入浓度 (ng/µL，可空)</span><input type="number" id="ligInsConc" value="" min="0" step="1" style="width:130px"></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button id="btnLig" class="primary">计算用量</button></div>
+      <div id="ligOut" style="margin-top:10px"><span class="note">填入浓度后可同时得到各需吸取的 µL 数。</span></div>
+    </div>
+  </section>
+
+  <!-- ============ 5. 计算器 ============ -->
+  <section class="panel" id="panel-calc" data-page-node-id="DsuegFq2pMivBFIN1QRMM1">
+    <div class="card" data-page-node-id="AOKbElBY2lrwWj14gLD7Gq">
+      <h2 data-page-node-id="PKnLxfeIEik0kHd8D31RCP">溶液稀释 <span class="hint" data-page-node-id="Ldkl5lqKcmP35Wsi1W79Us">C₁V₁ = C₂V₂，任意三项求第四项</span></h2>
+      <div class="row" data-page-node-id="W6dGswnCECBrH2qshjwHWM">
+        <div class="field" data-page-node-id="T8ME4Ws1iX0Z6NQJj5atbf"><span data-page-node-id="rCe18vLfi8a11rAutvDA4C">C₁ 母液浓度</span><input type="number" id="dC1" value="100" step="0.1" style="width:110px" data-page-node-id="O3yW9fbYr1uB9JfCOoJxsA"></div>
+        <div class="field" data-page-node-id="fKIGRBTYsTDlif4MT90tfL"><span data-page-node-id="OpqQrE9Od0kHGlGDQzJCBc">V₁ 母液体积</span><input type="number" id="dV1" value="" step="0.1" style="width:110px" data-page-node-id="KSmWbZwmDMKlhRLXNbkN6s"></div>
+        <div class="field" data-page-node-id="PcWx0v5Vw21jxW8himtGAF"><span data-page-node-id="r6SUJsyQ4c3xc4TC8E19JS">C₂ 终浓度</span><input type="number" id="dC2" value="10" step="0.1" style="width:110px" data-page-node-id="nDsSNip5XuR8DEwY9VCUWJ"></div>
+        <div class="field" data-page-node-id="h2QTgHe0vlkAR5NzZAmMGp"><span data-page-node-id="NsVSNw4DFgNWJoEjLxHKLB">V₂ 终体积</span><input type="number" id="dV2" value="100" step="0.1" style="width:110px" data-page-node-id="UdrH1nJstXMrUzW9CIn0HQ"></div>
+        <button id="btnDilute" class="primary" data-page-node-id="8siHCa7vWhSl7s5uouXQ2N">计算留空的那个</button>
+      </div>
+      <div class="note" id="diluteOut" data-page-node-id="7WxKGHNwlV7QYffSAaa5ve">浓度与体积单位需一致（如 mM 与 mL、µM 与 µL）。</div>
+    </div>
+
+    <div class="card" data-page-node-id="S7fPzwVbq9f3einpACDnVw">
+      <h2 data-page-node-id="qPRwL9C8nd4ye3AQDBb2cJ">质量 ⇄ 摩尔</h2>
+      <div class="row" data-page-node-id="O749oy0lFRM2Ylcmz1suKd">
+        <div class="field" data-page-node-id="zKPaZ0zu2dnGp7LlQJsqVD"><span data-page-node-id="xzyDO2GHd7nBLYj15fPWf8">分子量 MW (g/mol)</span><input type="number" id="mMW" value="342.3" step="0.1" style="width:130px" data-page-node-id="EKBbU9NyCGqWGgR7BbGvTB"></div>
+        <div class="field" data-page-node-id="aOqa42awHOioEoi2z2yBtk"><span data-page-node-id="30OQIBykksukR7VVEyLx5R">质量 (mg)</span><input type="number" id="mMass" value="34.23" step="0.01" style="width:110px" data-page-node-id="KhFVzVZ2j4QYsQkWao2ZY1"></div>
+        <div class="field" data-page-node-id="LgUyVp17PM49fvizu2izcQ"><span data-page-node-id="uL93SphGvZ0T85WbvRD174">物质的量 (mmol)</span><input type="number" id="mMol" value="" step="0.001" style="width:120px" data-page-node-id="EKsS7KsmP6HNv9nAgMzbuZ"></div>
+        <button id="btnMolFromMass" class="small" data-page-node-id="BdkqRE8iBXa3nHzMkN3r2u">质量 → mmol</button>
+        <button id="btnMassFromMol" class="small" data-page-node-id="JVirwnMSTMw0SiCdjKbVeC">mmol → 质量</button>
+      </div>
+      <hr class="sep" data-page-node-id="s7A0t0EXRVjlCQizO7blYo">
+      <div class="row" data-page-node-id="DCGcNzBSXjxMelvJIj3jYL">
+        <div class="field" data-page-node-id="kJApWAw756BPv5HXGG5LiW"><span data-page-node-id="CBFTumbo99oUG2deY2ApM5">目标浓度 (% w/v)</span><input type="number" id="pPct" value="1" step="0.1" style="width:110px" data-page-node-id="iBeMBGD7pAUvZoCCyvKlr7"></div>
+        <div class="field" data-page-node-id="ltA7RkxoHPBuZHgIsp843W"><span data-page-node-id="p4eZ3h2fIe6zHuW7bDrFPm">定容体积 (mL)</span><input type="number" id="pVol" value="100" step="1" style="width:110px" data-page-node-id="YaGy1fAr2gFSeWBszcX7qP"></div>
+        <div class="field" data-page-node-id="jH4VNJcBGoEfhHAzOuiSZg"><span data-page-node-id="sUVN5ozp8vqY7trwBTTIUq">分子量 MW</span><input type="number" id="pMW" value="342.3" step="0.1" style="width:120px" data-page-node-id="NLvAWaiWxWVE4n9Ha1PTSr"></div>
+        <button id="btnPct" class="small" data-page-node-id="AeC2vNoyAxTF7YOxTHgQKM">换算</button>
+      </div>
+      <div class="note" id="molOut" data-page-node-id="sbEBvVBVIrU2AeXxkK03v0"></div>
+    </div>
+
+    <div class="card" data-page-node-id="ziAhIPaji0PlQY6UcDMKQY">
+      <h2 data-page-node-id="DyqKbpG2A6WOqH1YIlmIkl">PCR 反应体系配制 <span class="hint" data-page-node-id="WR0YZtSt2JsddC5eEA8fsX">自动生成加样表与 Master Mix，含 N 管份量</span></h2>
+      <div class="grid grid-3" data-page-node-id="PoN60dqBz6pmx9zFnN5nNd">
+        <div class="field" data-page-node-id="yoGM1uMOC2dU40SJYRNSix"><span data-page-node-id="QBi1ov1dYotkkhVyAqPdvy">单管总体积 (µL)</span><input type="number" id="rxVol" value="25" step="1" style="width:100px" data-page-node-id="H55qbBkWliQtADACsfSe3K"></div>
+        <div class="field" data-page-node-id="4OsNokSy5gT4scLfH0KgoL"><span data-page-node-id="F8Oz2Nc2gw8pgUoWWtvur5">反应管数 N</span><input type="number" id="rxN" value="8" step="1" style="width:100px" data-page-node-id="eDTYwCPV2CmCAemIzVeZsQ"></div>
+        <div class="field" data-page-node-id="tiD7AjJzf2VNRUP93DQCcj"><span data-page-node-id="HUVYJHNrjt9nFP9MV6m8UH">额外余量 (管)</span><input type="number" id="rxExtra" value="1" step="1" style="width:100px" data-page-node-id="3ObOCPPIVESNRiNr3UWSB5"></div>
+        <div class="field" data-page-node-id="cz0TyNSgHVeeqt2JADHDOX"><span data-page-node-id="YHdQkwhMmfXIYTAhH23MyJ">模板浓度 (ng/µL)</span><input type="number" id="rxTpl" value="50" step="1" style="width:100px" data-page-node-id="3sZ1JCWbP3NAIBr8lXFqny"></div>
+        <div class="field" data-page-node-id="ymALD5WqjMMH7ea1QCmCVW"><span data-page-node-id="gDhVleTLNfW9HYf88BS2q6">每管模板量 (ng)</span><input type="number" id="rxTplNg" value="50" step="1" style="width:100px" data-page-node-id="4GQzBUZodg1EzqzuSE4AnV"></div>
+        <div class="field" data-page-node-id="dhFjCurH9bOUMw7gOQlbId"><span data-page-node-id="O9pMdzgB6vNtLmsRnGC7DP">引物母液 (µM)</span><input type="number" id="rxPrStock" value="10" step="1" style="width:100px" data-page-node-id="koCaYGxyAN66aifr9ei6vU"></div>
+        <div class="field" data-page-node-id="EXT3hNDqfoiYa57fAH81r6"><span data-page-node-id="GbKAjIYrpO8cv60kEDe4OI">引物终浓度 (nM)</span><input type="number" id="rxPrFinal" value="200" step="50" style="width:100px" data-page-node-id="ub4XIAfrygNhc58aBwzrAe"></div>
+        <div class="field" data-page-node-id="FV2gBwgiKc6asJAXXjtWPh"><span data-page-node-id="neiS9HRNi3mUWUPVdwovGE">dNTP 母液 (mM each)</span><input type="number" id="rxDntpStock" value="2.5" step="0.1" style="width:100px" data-page-node-id="KAHfr1ZPTGBJABa9onxkvj"></div>
+        <div class="field" data-page-node-id="TbPTD8DIrdhpiukhkGKlir"><span data-page-node-id="OnkhmcFbYx5VQ1ejpFjgH6">dNTP 终浓度 (µM each)</span><input type="number" id="rxDntpFinal" value="200" step="10" style="width:100px" data-page-node-id="JRJjbDFwGVi3HnXLZFAhoj"></div>
+        <div class="field" data-page-node-id="i5mWZqZOFr8szMuxC8v1c7"><span data-page-node-id="k8nqPNFkV0z5ia66tCDRXd">缓冲液母液 (×)</span><input type="number" id="rxBufStock" value="10" step="1" style="width:100px" data-page-node-id="CD7cJ79ve5X8ktjM8vpGUm"></div>
+        <div class="field" data-page-node-id="Nkv6W6j3v8qFTmUgjzT4iD"><span data-page-node-id="RcFKBYifYJnAod8c9SNrJ3">聚合酶 (U/µL)</span><input type="number" id="rxPolStock" value="5" step="0.5" style="width:100px" data-page-node-id="6eIV6racNLnA2mGsvsVCn8"></div>
+        <div class="field" data-page-node-id="EMFe6SjzMnVILo0Ry3tXqr"><span data-page-node-id="mzJAAw2kvqpcPF2LP1IPo3">每管酶量 (U)</span><input type="number" id="rxPolU" value="1.25" step="0.05" style="width:100px" data-page-node-id="GXDceZ94tEDyvYkFmIIjgd"></div>
+      </div>
+      <div class="row" style="margin-top:12px" data-page-node-id="ZDHHUp37F7Nn2FrUHhFvDb"><button id="btnRx" class="primary" data-page-node-id="js4THeveFqnbCDsMo1XAkJ">生成加样表</button></div>
+      <div class="tablewrap" style="margin-top:12px" data-page-node-id="6zO5Yi9V7Lt2hbBqrfZ1Gm">
+        <table class="tbl" id="rxTbl" data-page-node-id="4UTY4gwWiqIlffnt6JW4d5">
+          <thead data-page-node-id="PE4N5ZXU7VjqnMA2PBYTnl"><tr data-page-node-id="uRHCVGWkn9z6E3fBjl6T2D">
+            <th data-page-node-id="adHJJAkHaJU5ljrcExNy5U">组分</th><th class="num" data-page-node-id="Qy6MtQy1Qqnq0QkfQFYVCJ">单管 (µL)</th><th class="num" data-page-node-id="OhrtiD10JlRTbGIo0cracc">Master Mix (µL)</th><th class="num" data-page-node-id="XiLMWGZbn9DF3qGQkTxwgg">终浓度</th><th data-page-node-id="phoeDf9cxJXrTNQhu9pW9k">备注</th>
+          </tr></thead>
+          <tbody data-page-node-id="0mpvTCMW9lBRz5DaYkk6AK"></tbody>
+          <tfoot data-page-node-id="r1aCR31g0t9hhJ4rs4zLoA"></tfoot>
+        </table>
+      </div>
+      <div class="note" id="rxOut" data-page-node-id="vWgizmEhIwY1toVT5oCNml"></div>
+    </div>
+
+    <div class="card" data-page-node-id="c70Pq1Pa6JnAwAUc3lfzCP">
+      <h2 data-page-node-id="a4g86CSWeM5irszZZeqqaQ">离心机 rpm ⇄ ×g</h2>
+      <div class="formula" data-page-node-id="kJKW15YRBlCzIUNEaX7eBR">RCF (×g) = 1.118 × 10⁻⁵ × r (cm) × rpm²<br data-page-node-id="ScOXbWfU1N1bk3mrEAdPbn">rpm = √( RCF / (1.118 × 10⁻⁵ × r) )</div>
+      <div class="row" data-page-node-id="KFjbCFGPLFTnJseaUMbpp4">
+        <div class="field" data-page-node-id="IyQbMzL5DbkVLzsF0N8kE2"><span data-page-node-id="YoEOEAt3tb6Hngd3vcy8K5">离心半径 r (cm)</span><input type="number" id="cfR" value="10" step="0.5" style="width:110px" data-page-node-id="XKC9a2v8If9A2DTbRWCJ0A"></div>
+        <div class="field" data-page-node-id="Flva58yh5tI3igSqSZjZ6m"><span data-page-node-id="EF5D8aJBINeTOEvZkJMafz">转速 (rpm)</span><input type="number" id="cfRpm" value="12000" step="100" style="width:110px" data-page-node-id="hPrhWj6KQ8qmyRMSFFDAKB"></div>
+        <div class="field" data-page-node-id="APxtdoVbDbSKBZjEBW3Iqf"><span data-page-node-id="35RFI8YRXUBFhSRyfU0B3y">离心力 (×g)</span><input type="number" id="cfG" value="" step="10" style="width:120px" data-page-node-id="6PZQkzE4FZeWPLq6fQFDna"></div>
+        <button id="btnRpm2g" class="small" data-page-node-id="rAvMvEpSKotVQJNGYkxFca">rpm → ×g</button>
+        <button id="btnG2rpm" class="small" data-page-node-id="o1yXo5PecAo5XpiYPYoPoz">×g → rpm</button>
+      </div>
+      <div class="note" id="cfOut" data-page-node-id="SGE4xTCnFUEjUOnFBos1k7">半径为转轴中心到离心管底部的距离，不同转头需分别测量。</div>
+    </div>
+
+    <div class="card" data-page-node-id="EKkvPOVOquJEMyvwVbQEzp">
+      <h2 data-page-node-id="8BVIUPqfnFG8nEvKJ6a1MT">菌浓估算 <span class="hint" data-page-node-id="0IAd8DawpfyKsiykEz3zUS">由 OD₆₀₀ 推算细胞密度（经验系数，不同菌种 / 仪器需自行标定）</span></h2>
+      <div class="row" data-page-node-id="TkFVv7eXLjxbwNzlhkyawn">
+        <div class="field" data-page-node-id="aaIOzY6ALRh6pZq3fBMUHR"><span data-page-node-id="cyMkkIiBhcgJMCEViFjZtf">OD₆₀₀</span><input type="number" id="od6" value="0.6" step="0.01" style="width:100px" data-page-node-id="V2gslERBqQHEjs7DnJGVAp"></div>
+        <div class="field" data-page-node-id="UhKQIm4MJ7RBBjHD5mChBD"><span data-page-node-id="PPfFPO8mxQfHGYmvEEmDcy">稀释倍数</span><input type="number" id="od6dil" value="1" step="1" style="width:100px" data-page-node-id="4EmhJVplzGvFggSZs0Pv8P"></div>
+        <div class="field" data-page-node-id="9Bo9ORWqJarn7hWlNHzfj1"><span data-page-node-id="LmLEpfrgH4wBdZslFNY108">菌种</span>
+          <select id="od6kind" style="width:190px" data-page-node-id="ioIpYoDNzX2fy7ybKLRMnf">
+            <option value="8e8" data-page-node-id="h8I5DdJOHf2phac0t3znLd">大肠杆菌 E. coli（8×10⁸ cells/mL/OD）</option>
+            <option value="3e7" data-page-node-id="14uq6iMiX3C0oBg9D474er">酿酒酵母 S. cerevisiae（3×10⁷）</option>
+            <option value="1e8" data-page-node-id="ZUrNOSO4oFXLzj0iQjJDh2">枯草芽孢杆菌 B. subtilis（1×10⁸）</option>
+          </select>
+        </div>
+        <button id="btnOd6" class="small" data-page-node-id="HrevSefJ6FBoPnddceDWgx">计算</button>
+      </div>
+      <div class="note" id="od6Out" data-page-node-id="ueuxTvtzZQe8tgtCVzCEEr"></div>
+    </div>
+  </section>
+
+  <!-- ============ 6. 帮助 ============ -->
+  <section class="panel" id="panel-help" data-page-node-id="xcrPhDddGfIzAlQDmgTMxp">
+    <div class="card" data-page-node-id="TEDGoBKP43GDHCYqrJazCq">
+      <h2 data-page-node-id="xYGs3JLBYpKypU7ORPD8JN">MolBench 是什么</h2>
+      <p style="margin:0 0 8px" data-page-node-id="H7gnIF9L5F91uPYqBPdBAL">一个装在浏览器里的分子生物学小工具箱。所有计算在<b data-page-node-id="21k8CY0zB28BueM5Zjes9y">本地完成</b>，序列不会上传到任何服务器，断网也能用。整个程序就是一个文件夹，双击 <code class="inline" data-page-node-id="GI7kfe0qK2cBJClRIosThb">index.html</code> 即可运行，也可以拷进 U 盘带去实验室。</p>
+      <ul class="tight" data-page-node-id="t3xg2KVcGK7HIgwabjJgEL">
+        <li data-page-node-id="Ul31uPrKz8Ao5dALq58l2K"><b data-page-node-id="5ZR78KHVNatiyVkBS29h8g">序列概览</b>：长度、GC%、组成、GC 窗口分布、序列条形码、分子量与 OD₂₆₀ 定量。</li>
+        <li data-page-node-id="q7YBCkPHpEbll6zLQjf3bK"><b data-page-node-id="dAvz0nJuw6Ot1x6kBXYOYP">序列操作</b>：反向互补、转录、六框翻译、ORF 查找与导出。</li>
+        <li><b>蛋白 &amp; 密码子</b>：蛋白理化性质一站式分析（pI、GRAVY、不稳定指数、脂肪族指数、消光系数、残基组成），以及按 E. coli 偏好密码子的<b>反向翻译 / 密码子优化</b>，并自动提示优化产物中新出现的酶切位点。</li>
+        <li data-page-node-id="Bwt0G5HnPKrN2P5IqF3oeV"><b data-page-node-id="IMMIvjPTVtX1N38LqBIKKr">酶切分析</b>：51 种常用酶的切点定位、线性/环状酶切片段计算（含跨接缝位点）、<b data-page-node-id="CACiEaSeMcaCkFcfuIMJ70">位点线性图谱</b>与<b data-page-node-id="1717vD6wDx0YR4uxZAa8Cf">虚拟凝胶电泳图</b>；另有 <b>Motif 模式搜索</b>（IUPAC 简并，找启动子 / RBS / polyA）与<b>双酶切兼容性速查</b>。</li>
+        <li data-page-node-id="5u5mJRQ4Xt8wRPeGpksV2E"><b data-page-node-id="eDRIdZbYH5b1oldaoI3wPI">引物 &amp; PCR</b>：<b data-page-node-id="8AJmQAsR5ZaY6ASlD01OLM">自动引物设计</b>、三种 Tm 算法、GC 夹、发夹与二聚体风险、产物大小与推荐程序；支持 <b>Q5® 型定点突变引物</b>（点突变 / 插入 / 缺失）。</li>
+        <li data-page-node-id="pCZpB4mp1460xLJdwseTal"><b data-page-node-id="Fxb7BLetoVNLefP2AV0HfW">实验计算器</b>：稀释、质量-摩尔换算、PCR 体系配制、rpm⇄×g、菌浓估算。</li>
+        <li data-page-node-id="WjMFrBEO6dsyEsGLw4Q10t"><b data-page-node-id="tv0HxoA8r3ZIpE7BxEuF7U">序列比对</b>：双序列全局比对（Needleman-Wunsch）；贴入 3 条以上序列会自动切换为<b data-page-node-id="JN59rL0CrLE6FM1sgrt3W7">多序列比对</b>（中心星算法，标出保守列）。</li>
+        <li data-page-node-id="1xC6uLSv0wSh69CCYZ0kPh"><b data-page-node-id="w5nKBeS5SETKlmlDe8dwBV">虚拟克隆</b>：载体与插入片段分别酶切 → 各选一段 → 检查黏端能否互补（含同尾酶判定）→ 得到重组序列；配套的<b>连接反应用量计算</b>直接按摩尔比给出 ng 与 µL。</li>
+        <li data-page-node-id="RUTfcNuRuH9Lcxvpi1gL1o"><b data-page-node-id="qBBMXkNjndUEulujaNPKUA">导入导出</b>：FASTA / GenBank / EMBL 文件读取（GenBank 的 FEATURES 注释可解析并提取区段），导出 FASTA、分析报告（Markdown）、凝胶图（PNG）；最近用过的序列保存在本机浏览器中。</li>
+      </ul>
+    </div>
+
+    <div class="card" data-page-node-id="z4ogbhHSKcAKC8Hmn1qDLN">
+      <h2 data-page-node-id="9GW9P6Y4qHQaxt5BjapPKQ">算法与参数出处</h2>
+      <div class="kv" data-page-node-id="F6wggIinClnBrkuAORKPXV"><span class="k" data-page-node-id="WdZLQ1rAtfWBTDN1yFGm9B">遗传密码表</span><span class="v" data-page-node-id="xsHjHoDqqFkqnOdi2igSTw">NCBI translation table 1（标准）</span></div>
+      <div class="kv" data-page-node-id="xFEoiOt1TuryWFHIxxdX8h"><span class="k" data-page-node-id="UHJI8pZrnFGoLrPKI0hZTA">最近邻热力学参数</span><span class="v" data-page-node-id="DYu8Yq4pErgbKNe6tzfdNI">SantaLucia PNAS 1998, unified NN parameters</span></div>
+      <div class="kv" data-page-node-id="LarXkiXHj2WTN17wwDs6bd"><span class="k" data-page-node-id="0P56ogBOQrZoyb0HY9SZ71">盐校正</span><span class="v" data-page-node-id="udYtj9WGz4KYXABlrEsDPA">Owczarzy et al. Biochemistry 2004（Mg²⁺ 折算为等效 Na⁺）</span></div>
+      <div class="kv" data-page-node-id="BttTaNQtbFy5Y3JARwRgHL"><span class="k" data-page-node-id="4CsNhdzBwnwqcHzwuMPhD6">二级结构 ΔG</span><span class="v" data-page-node-id="CMAyeHYcNqfmiJD4Mz7SmN">同一套 NN 参数：ΔG₃₇ = ΔH − T·ΔS/1000，发夹另加环 initiation 罚值</span></div>
+      <div class="kv" data-page-node-id="CQiD8av3QJ7GHXHw6BwDnA"><span class="k" data-page-node-id="B4vCYK6dhDYGdF8pHbZgOH">Tm 计算式</span><span class="v" data-page-node-id="CeKoILwpdWbkGxnVmXRNQn">Tm = ΔH×1000 / (ΔS + R·ln(C<sub data-page-node-id="RhZJrGPBvnx7rUE85QyL2o">T</sub>/4)) − 273.15</span></div>
+      <div class="kv" data-page-node-id="RSMQrkQ7jHTpHSWJCGgSK0"><span class="k" data-page-node-id="R8j97h4nbjaRTEzPIhQcse">GC% 经验 Tm</span><span class="v" data-page-node-id="V5M6iJJ8g4BcQJe0AQrBnV">Tm = 64.9 + 41×(n<sub data-page-node-id="8CshEVyohotsH0R16PDmEQ">GC</sub> − 16.4)/N</span></div>
+      <div class="kv" data-page-node-id="zEEGN9jubhMdLYITPLSv4K"><span class="k" data-page-node-id="McgDBdn0a316ftSQRDDEUt">Wallace 规则</span><span class="v" data-page-node-id="Oknsw2NYi8E7cTAHoFfDqq">Tm = 2×(A+T) + 4×(G+C)（仅 &lt;14 nt）</span></div>
+      <div class="kv" data-page-node-id="BAjzw0CpuFFSgFg55lCAll"><span class="k" data-page-node-id="QfZQ5xvcf55IwJahXBko09">核酸残基质量</span><span class="v" data-page-node-id="knhDqPsNvtCMrm3GaLiABY">dA 313.21 / dC 289.18 / dG 329.21 / dT 304.20 Da</span></div>
+      <div class="kv" data-page-node-id="lQg14UaaDhGskqIBoejzHk"><span class="k" data-page-node-id="AqlRTePf8dBniFwJeVC0T4">OD₂₆₀ 系数</span><span class="v" data-page-node-id="UtAUGKW2t9GDAw8yfid7Jb">dsDNA 50、ssDNA 33、RNA 40 µg/mL per OD</span></div>
+      <div class="kv" data-page-node-id="ByxuiYlWNUD57TNX2ciRVo"><span class="k" data-page-node-id="ysbvTtpfXIgtRxri1Lg6JH">序列比对</span><span class="v" data-page-node-id="pA062amozvF6NujMKRFqSG">Needleman-Wunsch 全局比对（线性 gap 罚分）</span></div>
+      <div class="kv" data-page-node-id="Xo4xAUUqc3rGTHV7UgqUpf"><span class="k" data-page-node-id="OOHWu5hCO3Zz4b4eUrkOSJ">离心力</span><span class="v" data-page-node-id="fO0mHaRKoelDQCG0LfoZLz">RCF = 1.118×10⁻⁵ · r(cm) · rpm²</span></div>
+      <div class="kv"><span class="k">等电点 pI</span><span class="v">EMBOSS/Bjellqvist pKa，Henderson-Hasselbalch 净电荷二分求零</span></div>
+      <div class="kv"><span class="k">GRAVY 疏水性</span><span class="v">Kyte &amp; Doolittle 1982 各残基疏水值平均</span></div>
+      <div class="kv"><span class="k">脂肪族指数</span><span class="v">Ikai 1980：X(A) + 2.9·X(V) + 3.9·[X(I)+X(L)]</span></div>
+      <div class="kv"><span class="k">不稳定指数</span><span class="v">Guruprasad 1990 DIWV 二肽权重，10/L·ΣDIWV，&gt;40 判不稳定</span></div>
+      <div class="kv"><span class="k">消光系数</span><span class="v">Pace 1995：ε₂₈₀ = 5500·W + 1490·Y（+125·C 全氧化）</span></div>
+      <div class="kv"><span class="k">密码子优化</span><span class="v">E. coli K12 高表达偏好密码子表（Kazusa）</span></div>
+      <div class="kv"><span class="k">连接用量</span><span class="v">双链 DNA 按 660 g/mol/bp 折算 pmol，按摩尔比分配</span></div>
+      <div class="kv"><span class="k">突变引物</span><span class="v">Q5® SDM 型：突变在正向 5′ 端、背对背扩增、KLD 环化</span></div>
+    </div>
+
+    <div class="card" data-page-node-id="z62YUFVFeMa6y007d1NT5A">
+      <h2 data-page-node-id="7aGpEDrF1hNO11AnD0ZWWA">使用小贴士</h2>
+      <ul class="tight" data-page-node-id="96zmtesOorn95APo8bhli6">
+        <li data-page-node-id="Re5zjxyDCEfJQ1IotcIvHx">粘贴带行号或每行 60 碱基的 FASTA 都没问题，程序会自动清洗空白与数字。</li>
+        <li data-page-node-id="nSiYTQGmRqPrh9GbAhPnaz">分析质粒时记得勾选「环状」，环状与线性的酶切片段数差 1。</li>
+        <li data-page-node-id="Rx4vTJ6Ar7BMaezbBEpi15">双酶切做克隆时，先看「单切点酶」筛选，能快速挑出不切断目的基因的酶。</li>
+        <li data-page-node-id="rCKkNFHpdJKl4PEVvFTixa">虚拟凝胶只是示意：超螺旋质粒实际跑得比线性快，开环最慢，图里未按构象区分。</li>
+        <li data-page-node-id="8ao52mwiDKmZpiPbBnlYU0">引物 Tm 以最近邻法为准；两引物 Tm 差 &gt; 3 °C 时建议重新设计较短的一条。</li>
+      </ul>
+    </div>
+
+    <div class="card" data-page-node-id="OSPeCyvs15UOyBE7gRGYPU">
+      <h2 data-page-node-id="7zi6ZGtpiQoEt4NXprz9an">键盘快捷键</h2>
+      <div class="kv" data-page-node-id="uncZMcl8RRwkS3ZZmED0xV"><span class="k" data-page-node-id="4nnQtTx75cq1juABmFbv40"><kbd data-page-node-id="mBGWzqnozx42NUp8I304v2">Ctrl</kbd>/<kbd data-page-node-id="EWMBMe5Bhp1cu5AezKw3bd">⌘</kbd> + <kbd data-page-node-id="7Yh5wydulv7hf2CDW2xRiW">1</kbd>…<kbd data-page-node-id="yL50o6AX3YvMfYrgJp3pRv">9</kbd></span><span class="v" data-page-node-id="B50pojaQtJhRL5fsKGkhhl">按顺序切换面板（概览 / 序列操作 / 蛋白 / 酶切 / 引物 / 比对 / 克隆 / 计算器 / 帮助）</span></div>
+      <div class="kv" data-page-node-id="AVSz48DkEcsikq2sPOdFPk"><span class="k" data-page-node-id="A8btygGjbupgVoEPEjlQPb"><kbd data-page-node-id="pI0CaBulidOyhGgt3Vbb6o">Ctrl</kbd>/<kbd data-page-node-id="AZ9WeAEUs5u5JCOWoVXDzi">⌘</kbd> + <kbd data-page-node-id="YYnlPG1ZGGOXiRvu90tyQv">Enter</kbd></span><span class="v" data-page-node-id="DjEF6LYrevJTDXZPv16DPW">执行当前面板的主操作（如「查找 ORF」「设计引物」「开始比对」「模拟连接」）</span></div>
+      <div class="note" data-page-node-id="8Bgc5BmB6d6RENeQ943Tb2">处理长序列时用快捷键切换面板，可以避免反复滚动。</div>
+    </div>
+
+    <div class="card" data-page-node-id="c281O86Xta8RGKkXYKBYto">
+      <h2 data-page-node-id="hNnAuV5fkbXsRRREqPLSNv">自检与性能</h2>
+      <p style="margin:0 0 8px" data-page-node-id="VUHLEx6cF87xLOXJezHFsD">核心算法与界面逻辑附带一整套断言测试，在项目目录执行（jsdom 相关测试需先把 <code class="inline">NODE_PATH</code> 指向已装 jsdom 的 node_modules）：</p>
+      <div class="formula" data-page-node-id="XVubv54JB7XYGpgttnMCtO">node tools/check.js &nbsp;&nbsp;# 核心算法断言 270+ 项，全部通过才算交付</div>
+      <ul class="tight" data-page-node-id="Hzl3M6n1nzfzR0i79BwxKC">
+        <li><code class="inline">tools/check.js</code>：FASTA/GenBank 解析、反向互补、翻译、GC/Tm、分子量、浓度换算、线性与环状酶切、简并酶、ORF 与 PCR、比对、蛋白理化性质、反向翻译、连接用量、突变引物、Motif、双酶切</li>
+        <li><code class="inline">tools/bug_hunt.js</code>：核心层缺陷猎取——环状拓扑、负链坐标、极端输入、数值抽查、酶库自洽，以及新功能的随机对拍与穷举对拍</li>
+        <li><code class="inline">tools/dom_smoke.js</code> / <code class="inline">bug_hunt_ui.js</code>：用 jsdom 真实加载页面，模拟点击与输入，捕捉运行时异常与 UI 状态不一致</li>
+        <li><code class="inline">tools/feature_audit.js</code>：功能对账——导入导出、注释解析、历史记录、报告章节连续性、新功能入口与帮助页承诺一致性</li>
+        <li><code class="inline">tools/cross_validate.js</code>：独立朴素实现对拍（酶切 / ORF / PCR / 翻译 / 引物约束 / 比对）</li>
+        <li><code class="inline">tools/profile.js</code>：多轮采样性能剖析，定位耗时热点</li>
+        <li><code class="inline">tools/visual_check.html</code>：真实浏览器内 canvas 像素自检（条带数量、图谱配色、构象带、localStorage 可用性）</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="footer" data-page-node-id="AJRSsXukM0Wxu986m38CXZ">MolBench · 单文件离线工具 · 供学习与实验设计参考，关键实验请以试剂盒说明书与实测为准</div>
+</div>
+
+<div class="toast" id="toast" data-page-node-id="r6wDAH1JvJXrJCEan9awlz"></div>
+
+<script src="assets/core.js"></script>
+<script src="assets/enzymes.js"></script>
+<script src="assets/examples.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

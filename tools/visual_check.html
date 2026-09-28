@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>visual check</title></head>
+<body>
+<iframe id="f" src="../index.html#digest" style="width:1240px;height:2200px;border:0"></iframe>
+<pre id="out">pending</pre>
+<script>
+function analyze() {
+  var res = {};
+  try {
+    var d = document.getElementById('f').contentDocument;
+    if (!d) { res.error = '无法访问 iframe 文档'; return res; }
+    function px(cv) {
+      var ctx = cv.getContext('2d');
+      return ctx.getImageData(0, 0, cv.width, cv.height);
+    }
+    function stats(cv, pred, label) {
+      var im = px(cv), W = cv.width, H = cv.height, n = 0;
+      var rows = {};
+      for (var y = 0; y < H; y++) {
+        var c = 0;
+        for (var x = 0; x < W; x++) {
+          var i = (y * W + x) * 4;
+          if (pred(im.data[i], im.data[i + 1], im.data[i + 2], im.data[i + 3])) { n++; c++; }
+        }
+        if (c > 0) rows[y] = c;
+      }
+      return { label: label, w: W, h: H, count: n, ratio: +(n / (W * H)).toFixed(4), rows: rows };
+    }
+    var isBand = function (r, g, b, a) { return a > 200 && b > 90 && b < 190 && r < 90 && g < 90; };
+    var isBlueLine = function (r, g, b, a) { return a > 200 && b > 180 && r < 90 && g < 140; };
+    var isColored = function (r, g, b, a) { return a > 200 && !(r > 245 && g > 245 && b > 245); };
+
+    var gel = d.getElementById('gelCanvas');
+    var gc = d.getElementById('gcCanvas');
+    var bar = d.getElementById('barCanvas');
+    var map = d.getElementById('mapCanvas');
+    if (map) {
+      var ms = stats(map, isColored, 'map');
+      // 采样统计图谱中出现的不同颜色数（切点按酶着色，应多于一种）
+      var im3 = px(map), colors = {};
+      for (var q = 0; q < im3.data.length; q += 4) {
+        var r3 = im3.data[q], g3 = im3.data[q + 1], b3 = im3.data[q + 2], a3 = im3.data[q + 3];
+        if (a3 < 200) continue;
+        if (r3 > 240 && g3 > 240 && b3 > 240) continue;
+        var key = (r3 >> 5) + '-' + (g3 >> 5) + '-' + (b3 >> 5);
+        colors[key] = (colors[key] || 0) + 1;
+      }
+      var major = Object.keys(colors).filter(function (k) { return colors[k] > 20; });
+      res.map = { w: ms.w, h: ms.h, coloredPixels: ms.count, distinctColors: major.length };
+      res.mapCap = d.getElementById('mapCap').textContent.slice(0, 60);
+    }
+    if (!gel) { res.error = '找不到 gelCanvas'; return res; }
+    var gs = stats(gel, isBand, 'gel bands');
+    // 把像素行压缩成连续条带区间
+    var ys = Object.keys(gs.rows).map(Number).sort(function (a, b) { return a - b; });
+    var groups = [];
+    ys.forEach(function (y) {
+      var last = groups[groups.length - 1];
+      if (last && y - last.y2 <= 3) { last.y2 = y; last.sum += gs.rows[y]; }
+      else groups.push({ y1: y, y2: y, sum: gs.rows[y] });
+    });
+    // 对最宽的一组，统计它横跨的 x 范围，用于区分「条带」与「文字」
+    var widest = groups.slice().sort(function (a, b) { return b.sum - a.sum; })[0] || { y1: 0, y2: 0, sum: 0 };
+    var xmin = 1e9, xmax = -1;
+    var im2 = px(gel);
+    for (var yy = widest.y1; yy <= widest.y2; yy++) {
+      for (var xx = 0; xx < gel.width; xx++) {
+        var ii = (yy * gel.width + xx) * 4;
+        if (isBand(im2.data[ii], im2.data[ii + 1], im2.data[ii + 2], im2.data[ii + 3])) {
+          if (xx < xmin) xmin = xx; if (xx > xmax) xmax = xx;
+        }
+      }
+    }
+    res.gel = {
+      canvasW: gs.w, canvasH: gs.h, bandPixels: gs.count,
+      bandGroups: groups.length,
+      bandY: groups.map(function (g) { return Math.round((g.y1 + g.y2) / 2); }),
+      groupDetail: groups.map(function (g) { return g.y1 + '-' + g.y2 + ':' + g.sum; }),
+      widestGroup: { y: widest.y1 + '-' + widest.y2, px: widest.sum, xRange: xmin + '-' + xmax, span: xmax - xmin + 1 }
+    };
+    res.gc = stats(gc, isBlueLine, 'gc curve');
+    res.gcPoints = Object.keys(res.gc.rows).length;
+    res.barcode = stats(bar, isColored, 'barcode');
+    // DOM 侧校验
+    res.fragRows = d.querySelectorAll('#fragTbl tbody tr').length;
+    res.siteRows = d.querySelectorAll('#siteTbl tbody tr').length;
+    res.gelLaneNames = (function () {
+      // 泳道名由 canvas 绘制，无法直接取；改为读片段表首列验证数据链路
+      var out = [];
+      d.querySelectorAll('#fragTbl tbody tr').forEach(function (tr) {
+        out.push(tr.children[1] ? tr.children[1].textContent.trim() : '');
+      });
+      return out;
+    })();
+    res.enzymeChecked = d.querySelectorAll('#enzList input:checked').length;
+    // 质粒环形图谱（仅环状模式显示）
+    var pm = d.getElementById('plasmidCanvas');
+    res.plasmid = (function () {
+      var card = d.getElementById('plasmidCard');
+      if (!pm || !card) return { error: '缺少图谱元素' };
+      if (card.style.display === 'none') return { error: '环状模式下未显示' };
+      var st = stats(pm, isColored, 'plasmid');
+      var im = px(pm), colors = {};
+      for (var q = 0; q < im.data.length; q += 4) {
+        var r4 = im.data[q], g4 = im.data[q + 1], b4 = im.data[q + 2], a4 = im.data[q + 3];
+        if (a4 < 200) continue;
+        if (r4 > 240 && g4 > 240 && b4 > 240) continue;
+        colors[(r4 >> 5) + '-' + (g4 >> 5) + '-' + (b4 >> 5)] = 1;
+      }
+      return {
+        w: st.w, h: st.h, coloredPixels: st.count,
+        distinctColors: Object.keys(colors).length,
+        cap: (d.getElementById('plasmidCap').textContent || '').slice(0, 44)
+      };
+    })();
+
+    // 清空酶选择 → 未酶切的环状质粒应出现 SC / LIN / OC 三条构象带
+    res.conformation = (function () {
+      var clear = d.querySelector('[data-quick="none"]');
+      if (!clear) return { error: '找不到清空选择按钮' };
+      clear.dispatchEvent(new d.defaultView.Event('click', { bubbles: true }));
+      // 关掉条带标注：文字颜色同样满足"偏蓝"判定，会污染扫描结果
+      var lbl = d.getElementById('gelLabel');
+      if (lbl && lbl.checked) { lbl.checked = false; lbl.dispatchEvent(new d.defaultView.Event('change', { bubbles: true })); }
+      var cv2 = d.getElementById('gelCanvas');
+      var ctx2 = cv2.getContext('2d');
+      var im2 = ctx2.getImageData(0, 0, cv2.width, cv2.height);
+      // 直接扫描第 2 条泳道（未酶切）的像素列，统计有深色条带的行，
+      // 不依赖坐标预测，也不受条带 alpha 深浅影响。
+      // 第 2 条泳道（index 1）= 未酶切，须带上泳道偏移；第 1 条是 Ladder
+      var padL = 52, padR = 18, gap = 8, laneN = 2, laneIdx = 1;
+      var laneW = (1140 - padL - padR - gap * (laneN - 1)) / laneN;
+      var laneX0 = padL + (laneW + gap) * laneIdx;
+      var sx = Math.round(laneX0 / 1140 * cv2.width);
+      var sw = Math.round((laneW * 0.8) / 1140 * cv2.width);
+      var rows = [];
+      // 只扫胶体区域（绘图逻辑坐标 34–394），排除顶部说明与底部泳道名
+      var yFrom = Math.round(34 / 440 * cv2.height), yTo = Math.round(394 / 440 * cv2.height);
+      for (var y = yFrom; y < yTo; y++) {
+        var cnt = 0;
+        for (var x = sx; x < Math.min(cv2.width, sx + sw); x++) {
+          var i = (y * cv2.width + x) * 4;
+          var r = im2.data[i], g = im2.data[i + 1], b = im2.data[i + 2], a = im2.data[i + 3];
+          // 蓝黑色条带（白底 255/255/255、浅灰底 238/242/246 都会被排除）
+          if (a > 200 && b > r && r < 200) cnt++;
+        }
+        if (cnt > 10) rows.push(y);
+      }
+      // 合并相邻行成条带组，并换算回绘图逻辑坐标（画布高 440）
+      var groups = [];
+      rows.forEach(function (y) {
+        var last = groups[groups.length - 1];
+        if (last && y - last.y2 <= 2) last.y2 = y;
+        else groups.push({ y1: y, y2: y });
+      });
+      return {
+        bandGroups: groups.length,
+        bandY: groups.map(function (g) { return +((g.y1 + g.y2) / 2 / cv2.height * 440).toFixed(1); }),
+        canvasH: cv2.height
+      };
+    })();
+
+    // 真实浏览器下 file:// 是否可用 localStorage（历史记录功能依赖它）
+    try {
+      localStorage.setItem('__mb_probe__', '1');
+      var okLs = localStorage.getItem('__mb_probe__') === '1';
+      localStorage.removeItem('__mb_probe__');
+      res.fileLocalStorage = okLs ? 'available' : 'read-write-failed';
+    } catch (e) {
+      res.fileLocalStorage = 'unavailable: ' + (e.name || e.message);
+    }
+  } catch (e) {
+    res.error = String(e && e.stack || e);
+  }
+  return res;
+}
+window.addEventListener('load', function () {
+  setTimeout(function () {
+    document.getElementById('out').textContent = 'RESULT' + JSON.stringify(analyze()) + 'ENDRESULT';
+  }, 2500);
+});
+</script>
+</body></html>

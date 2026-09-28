@@ -181,14 +181,14 @@ MolBench/
 │   └── MolBench-demo.fasta 示例序列（FASTA 文本，可单独取用）
 └── tools/
     ├── gen_examples.js     生成示例序列
-    ├── check.js            核心算法断言测试（260+ 项）
+    ├── check.js            核心算法断言测试（270+ 项）
     ├── lint_ids.js         语法与 DOM 引用静态检查
     ├── dom_smoke.js        jsdom 真实渲染冒烟测试（64 项，含回归用例）
-    ├── feature_audit.js    功能对账：导入导出 / FEATURES / 历史 / 报告 / 新功能入口（26 项）
+    ├── feature_audit.js    功能对账：导入导出 / FEATURES / 历史 / 报告 / 新功能入口（27 项）
     ├── profile.js          性能剖析：多轮采样定位耗时热点
     ├── cross_validate.js   算法交叉验证（独立朴素实现对拍）
     ├── bug_hunt.js         核心层缺陷猎取（边界 / 数值 / 酶库 / 新功能随机对拍）
-    ├── bug_hunt_ui.js      UI 层缺陷猎取（状态一致性 / 注入防护 / 新功能交互，54 项）
+    ├── bug_hunt_ui.js      UI 层缺陷猎取（状态一致性 / 注入防护 / 新功能交互，57 项）
     ├── visual_check.html   浏览器内 canvas 像素自检
     └── shots/              三个面板的渲染截图
 ```
@@ -199,15 +199,15 @@ MolBench/
 
 | 命令 | 覆盖 | 规模 |
 | --- | --- | --- |
-| `node tools/check.js` | 核心算法断言：解析 / GenBank·EMBL·FEATURES·join / 翻译 / Tm / ΔG 热力学 / 分子量 / 酶切 / 跨接缝 / ORF / PCR / 引物设计 / 双序列与多序列比对 / 虚拟克隆 / 1 Mb 性能护栏 | 207 项 |
+| `node tools/check.js` | 核心算法断言：解析 / GenBank·EMBL·FEATURES·join / 翻译 / Tm / ΔG 热力学 / 分子量 / 酶切 / 跨接缝 / ORF / PCR / 引物设计 / 双序列与多序列比对 / 虚拟克隆 / 蛋白理化性质 / 反向翻译 / 连接用量 / 突变引物 / Motif 穷举对拍 / 双酶切 / 1 Mb 性能护栏 | 271 项 |
 | `node tools/lint_ids.js` | JS 语法、HTML↔JS 的 DOM id 一致性、酶库合法性、脚本与样式引用 | — |
-| `node tools/dom_smoke.js` | 需 jsdom：加载页面模拟用户操作，捕获运行时异常 | 61 项 |
-| `node tools/feature_audit.js` | 需 jsdom：功能对账（导入导出 / FEATURES 表 / 复制一致性 / 示例切换 / 环状重算 / 历史 / 报告内容 / 帮助页文案） | 20 项 |
+| `node tools/dom_smoke.js` | 需 jsdom：加载页面模拟用户操作，捕获运行时异常 | 64 项 |
+| `node tools/feature_audit.js` | 需 jsdom：功能对账（导入导出 / FEATURES 表 / 复制一致性 / 示例切换 / 环状重算 / 历史 / 报告内容与新章节 / 新功能入口 / 帮助页文案） | 27 项 |
 | `node tools/profile.js` | 需 jsdom：性能剖析与缓存有效性验证（多轮采样取最小） | — |
 | `node tools/cross_validate.js` | **算法交叉验证**：用独立朴素实现对拍酶切 / ORF / 环状 / PCR / 翻译 / 引物约束 / 比对 | 对拍千余组 |
-| `node tools/bug_hunt.js` | 核心层缺陷猎取：极端输入、数值正确性、酶库自洽 | — |
-| `node tools/bug_hunt_ui.js` | 需 jsdom：UI 层缺陷猎取（状态一致性 / 极端参数 / 重复操作 / 注入防护） | 23 项 |
-| `tools/visual_check.html` | 真实 Chrome 无头浏览器内 `getImageData` 像素自检：4 个 canvas 是否真的画出内容 | — |
+| `node tools/bug_hunt.js` | 核心层缺陷猎取：极端输入、数值正确性、酶库自洽、新功能随机对拍与穷举对拍 | — |
+| `node tools/bug_hunt_ui.js` | 需 jsdom：UI 层缺陷猎取（状态一致性 / 极端参数 / 重复操作 / 注入防护 / 新功能交互 / 快捷键） | 57 项 |
+| `tools/visual_check.html` | 真实 Chrome 无头浏览器内 `getImageData` 像素自检：4 个 canvas 是否真的画出内容、构象带数量、图谱配色、file:// 下 localStorage 可用性 | — |
 
 `dom_smoke.js` 里有专门标注 `[回归]` 的用例，锁住这些**曾经真实发生过**的缺陷：
 
